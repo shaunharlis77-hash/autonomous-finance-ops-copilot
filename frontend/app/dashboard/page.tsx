@@ -11,6 +11,10 @@ type AnalyticsSummary = {
   overdue_review_cases: number;
   approval_rate: number;
   rejection_rate: number;
+  pending_review_tasks: number;
+  resolved_review_tasks: number;
+  assigned_review_tasks: number;
+  unassigned_review_tasks: number;
 };
 
 type RecentActivity = {
@@ -114,6 +118,26 @@ export default function DashboardPage() {
       label: "Rejection Rate",
       value: `${summary.rejection_rate}%`,
       description: "Percentage of cases rejected by validation or review",
+    },
+    {
+      label: "Review Tasks",
+      value: summary.pending_review_tasks,
+      description: "Open human review tasks requiring attention",
+    },
+    {
+      label: "Resolved Reviews",
+      value: summary.resolved_review_tasks,
+      description: "Human review tasks completed by reviewers",
+    },
+    {
+      label: "Assigned Reviews",
+      value: summary.assigned_review_tasks,
+      description: "Pending review tasks with assigned ownership",
+    },
+    {
+      label: "Unassigned Reviews",
+      value: summary.unassigned_review_tasks,
+      description: "Pending review tasks without reviewer ownership",
     },
   ];
 
