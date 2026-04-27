@@ -46,6 +46,12 @@ class AnalyticsService:
             else 0
         )
 
+        escalation_rate = (
+            round((pending_review_cases / total_cases) * 100, 1)
+            if total_cases > 0
+            else 0
+        )
+
         pending_review_tasks = (
             db.query(ReviewTask)
             .filter(ReviewTask.status == "pending")
@@ -85,6 +91,7 @@ class AnalyticsService:
             "overdue_review_cases": overdue_review_cases,
             "approval_rate": approval_rate,
             "rejection_rate": rejection_rate,
+            "escalation_rate": escalation_rate,
             "pending_review_tasks": pending_review_tasks,
             "resolved_review_tasks": resolved_review_tasks,
             "assigned_review_tasks": assigned_review_tasks,
