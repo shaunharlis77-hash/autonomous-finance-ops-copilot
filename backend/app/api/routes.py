@@ -435,55 +435,8 @@ async def assign_review_task(
     reviewer_name: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    case = db.query(Case).filter(Case.id == case_id).first()
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-
-    review_task = (
-        db.query(ReviewTask)
-        .filter(ReviewTask.case_id == case_id, ReviewTask.status == "pending")
-        .first()
+    return await ReviewService.assign_reviewer(
+        db=db,
+        case_id=case_id,
+        reviewer_name=reviewer_name,
     )
-    if not review_task:
-        raise HTTPException(status_code=404, detail="Pending review task not found")
-
-    review_task.assigned_to = reviewer_name
-    db.commit()
-    db.refresh(review_task)
-
-    AuditService.log_event(
-        db, case.id, "review_task_assigned", f"Review task assigned to {reviewer_name}"
-    )
-
-    reviewer_email_map = {
-        "Shaun": "shaunharlis77@gmail.com",
-    }
-
-    assigned_to_email = reviewer_email_map.get(reviewer_name, "shaunharlis77@gmail.com")
-
-    n8n_service = N8NService()
-    n8n_payload = {
-        "event_type": "review_task_assigned",
-        "case_id": case.id,
-        "case_type": case.case_type,
-        "submitter_name": case.submitter_name,
-        "submitter_email": case.submitter_email,
-        "status": case.status,
-        "current_stage": case.current_stage,
-        "assigned_to": reviewer_name,
-        "assigned_to_email": assigned_to_email,
-        "review_task_id": review_task.id,
-    }
-
-    n8n_result = await n8n_service.send_decision_event(n8n_payload)
-
-    AuditService.log_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
-    return {
-        "message": "Review task assigned successfully",
-        "review_task": {
-            "id": review_task.id,
-            "case_id": review_task.case_id,
-            "assigned_to": review_task.assigned_to,
-            "status": review_task.status,
-        },
-    }
