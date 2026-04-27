@@ -46,6 +46,36 @@ class AnalyticsService:
             else 0
         )
 
+        pending_review_tasks = (
+            db.query(ReviewTask)
+            .filter(ReviewTask.status == "pending")
+            .count()
+        )
+
+        resolved_review_tasks = (
+            db.query(ReviewTask)
+            .filter(ReviewTask.status == "resolved")
+            .count()
+        )
+
+        assigned_review_tasks = (
+            db.query(ReviewTask)
+            .filter(
+                ReviewTask.status == "pending",
+                ReviewTask.assigned_to.isnot(None),
+            )
+            .count()
+        )
+
+        unassigned_review_tasks = (
+            db.query(ReviewTask)
+            .filter(
+                ReviewTask.status == "pending",
+                ReviewTask.assigned_to.is_(None),
+            )
+            .count()
+        )
+
         return {
             "total_cases": total_cases,
             "approved_cases": approved_cases,
@@ -55,6 +85,10 @@ class AnalyticsService:
             "overdue_review_cases": overdue_review_cases,
             "approval_rate": approval_rate,
             "rejection_rate": rejection_rate,
+            "pending_review_tasks": pending_review_tasks,
+            "resolved_review_tasks": resolved_review_tasks,
+            "assigned_review_tasks": assigned_review_tasks,
+            "unassigned_review_tasks": unassigned_review_tasks,
         }
     
     
