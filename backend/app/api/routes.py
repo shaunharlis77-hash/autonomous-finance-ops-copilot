@@ -20,6 +20,7 @@ from app.models.review_task import ReviewTask
 import ast
 from app.workflows.decision_graph import build_decision_graph
 from app.services.review_service import ReviewService
+from app.services.analytics_service import AnalyticsService
 
 router = APIRouter()
 
@@ -341,6 +342,13 @@ def list_cases(db: Session = Depends(get_db)):
         }
         for case in cases
     ]
+
+
+@router.get("/analytics/summary")
+def get_analytics_summary(
+    db: Session = Depends(get_db),
+):
+    return AnalyticsService.get_summary(db)
 
 
 @router.get("/cases/{case_id}")

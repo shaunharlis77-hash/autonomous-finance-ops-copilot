@@ -8,7 +8,6 @@ from app.services.audit_service import AuditService
 from app.services.n8n_service import N8NService
 
 
-
 class ReviewService:
     ALLOWED_ACTIONS = ["approve", "reject", "request_info"]
 
