@@ -34,6 +34,18 @@ class AnalyticsService:
             .count()
         )
 
+        approval_rate = (
+            round((approved_cases / total_cases) * 100, 1)
+            if total_cases > 0
+            else 0
+        )
+
+        rejection_rate = (
+            round((rejected_cases / total_cases) * 100, 1)
+            if total_cases > 0
+            else 0
+        )
+
         return {
             "total_cases": total_cases,
             "approved_cases": approved_cases,
@@ -41,6 +53,8 @@ class AnalyticsService:
             "pending_review_cases": pending_review_cases,
             "awaiting_information_cases": awaiting_information_cases,
             "overdue_review_cases": overdue_review_cases,
+            "approval_rate": approval_rate,
+            "rejection_rate": rejection_rate,
         }
     
     

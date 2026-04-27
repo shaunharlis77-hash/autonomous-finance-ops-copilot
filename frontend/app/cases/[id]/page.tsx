@@ -137,6 +137,57 @@ function getPriorityBadge(status: string, createdAt: string) {
   };
 }
 
+function getStatusBadge(status: string) {
+  const normalized = status.toLowerCase();
+
+  if (normalized.includes("approved")) {
+    return "border-emerald-500/40 bg-emerald-500/10 text-emerald-300";
+  }
+
+  if (normalized.includes("rejected")) {
+    return "border-red-500/40 bg-red-500/10 text-red-300";
+  }
+
+  if (normalized.includes("pending")) {
+    return "border-amber-500/40 bg-amber-500/10 text-amber-300";
+  }
+
+  if (normalized.includes("awaiting")) {
+    return "border-blue-500/40 bg-blue-500/10 text-blue-300";
+  }
+
+  return "border-slate-700 bg-slate-800 text-slate-300";
+}
+
+function getWorkflowStateLabel(status: string, stage: string) {
+  if (status === "approved" || stage === "completed") {
+    return "Completed";
+  }
+
+  if (status === "rejected" || stage === "closed") {
+    return "Closed";
+  }
+
+  if (status === "awaiting_information") {
+    return "Awaiting Information";
+  }
+
+  if (status === "pending_review" || stage === "review") {
+    return "Human Review";
+  }
+
+  return formatStatus(stage || status);
+}
+
+function isReviewOverdue(createdAt: string) {
+  const created = new Date(createdAt).getTime();
+  const now = new Date().getTime();
+
+  const hoursElapsed = (now - created) / (1000 * 60 * 60);
+
+  return hoursElapsed >= 24;
+}
+
 export default function CaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
@@ -313,9 +364,19 @@ export default function CaseDetailPage() {
 
   const caseAge = getCaseAge(caseDetail.case.created_at);
 
+  const reviewIsOverdue =
+    caseDetail.review_task?.status === "pending" &&
+    caseDetail.review_task?.created_at &&
+    isReviewOverdue(caseDetail.review_task.created_at);
+
+  const reviewerLocked =
+    caseDetail.review_task?.status === "pending" &&
+    !!caseDetail.review_task?.assigned_to;
+
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="space-y-3">
+    <main className="min-h-screen bg-slate-950 p-8 text-white">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <div className="space-y-3">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
             Finance Operations
@@ -341,7 +402,13 @@ export default function CaseDetailPage() {
           </p>
 
           <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-            <span>Status: {formatStatus(caseDetail.case.status)}</span>
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
+                caseDetail.case.status
+              )}`}
+            >
+              Status: {formatStatus(caseDetail.case.status)}
+            </span>
             <span>•</span>
             <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
             <span>•</span>
@@ -350,8 +417,8 @@ export default function CaseDetailPage() {
         </div>
 
         {showCurrencyWarning && (
-          <div className="border border-yellow-500 bg-yellow-500/10 rounded-lg p-4">
-            <p className="font-semibold text-yellow-300">
+          <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
+            <p className="text-lg font-semibold text-yellow-300">
               Currency extraction warning
             </p>
             <p className="text-sm text-yellow-200 mt-1">
@@ -367,7 +434,7 @@ export default function CaseDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border rounded-lg p-4 space-y-4">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
           <h2 className="text-xl font-semibold">Operational Context</h2>
 
           <div className="space-y-3 text-sm">
@@ -378,10 +445,12 @@ export default function CaseDetailPage() {
 
             <div>
               <p className="text-slate-400">Current Workflow State</p>
-              <p className="font-medium">
-                {formatStatus(caseDetail.case.status)} →{" "}
-                {formatStatus(caseDetail.case.current_stage)}
-              </p>
+              <span className="inline-flex rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
+                {getWorkflowStateLabel(
+                  caseDetail.case.status,
+                  caseDetail.case.current_stage
+                )}
+              </span>
             </div>
 
             <div>
@@ -395,8 +464,19 @@ export default function CaseDetailPage() {
             </div>
           </div>
         </div>
-        <div className="border rounded-lg p-4 space-y-4">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
           <h2 className="text-xl font-semibold">Review Ownership</h2>
+          {reviewIsOverdue && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+              <p className="text-sm font-semibold text-red-300">
+                SLA Warning: Review overdue
+              </p>
+              <p className="mt-1 text-sm text-red-200/80">
+                This review task has been pending for more than 24 hours and should be
+                prioritized.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3 text-sm">
             <div>
@@ -433,65 +513,82 @@ export default function CaseDetailPage() {
       </div>
 
       {caseDetail.review_task && caseDetail.review_task.status === "pending" && (
-        <div className="border rounded-lg p-4 space-y-4">
-          <div className="border rounded-lg p-4 space-y-4">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-6">
+          <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4">
             <div>
               <h3 className="text-lg font-semibold">Assign Reviewer</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                Assign this review task before taking action.
+              <p className="mt-1 text-sm text-slate-400">
+                Assign ownership before a reviewer takes action.
               </p>
             </div>
 
             <form className="space-y-4" onSubmit={handleAssignTask}>
               <div>
-                <label className="block text-sm mb-1">Assign To</label>
+                <label className="mb-1 block text-sm text-slate-300">Assign To</label>
                 <input
                   type="text"
                   value={assigneeName}
                   onChange={(e) => setAssigneeName(e.target.value)}
-                  className="border rounded-md px-3 py-2 w-full bg-transparent"
+                  disabled={reviewerLocked}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={assigningTask}
-                className="border rounded-md px-4 py-2 hover:bg-gray-800 disabled:opacity-50"
+                disabled={assigningTask || reviewerLocked}
+                className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-emerald-300"
               >
-                Assign Task
+                {reviewerLocked ? "Reviewer Assigned" : "Assign Task"}
               </button>
 
+              {reviewerLocked && (
+                <p className="text-sm text-slate-400">
+                  Ownership is locked because this task is already assigned to{" "}
+                  <span className="font-medium text-slate-200">
+                    {caseDetail.review_task?.assigned_to}
+                  </span>
+                  .
+                </p>
+              )}
+
               {assignmentMessage && (
-                <p className="text-sm text-gray-300">{assignmentMessage}</p>
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
+                  <p className="text-sm font-medium text-emerald-300">
+                    {assignmentMessage}
+                  </p>
+                </div>
               )}
             </form>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold">Reviewer Actions</h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="mt-1 text-sm text-slate-400">
               Resolve this case directly from the UI.
             </p>
           </div>
 
           <form className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Reviewer Name</label>
+              <label className="mb-1 block text-sm text-slate-300">
+                Reviewer Name
+              </label>
               <input
                 type="text"
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
-                className="border rounded-md px-3 py-2 w-full bg-transparent"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Comment</label>
+              <label className="mb-1 block text-sm text-slate-300">Comment</label>
               <textarea
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
                 placeholder="Add reviewer notes..."
-                className="border rounded-md px-3 py-2 w-full min-h-[120px] bg-transparent"
+                className="min-h-[140px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
               />
             </div>
 
@@ -500,7 +597,7 @@ export default function CaseDetailPage() {
                 type="button"
                 onClick={(e) => handleReviewAction(e, "approve")}
                 disabled={submittingReview}
-                className="border rounded-md px-4 py-2 hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
               >
                 Approve
               </button>
@@ -509,7 +606,7 @@ export default function CaseDetailPage() {
                 type="button"
                 onClick={(e) => handleReviewAction(e, "reject")}
                 disabled={submittingReview}
-                className="border rounded-md px-4 py-2 hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/20"
               >
                 Reject
               </button>
@@ -518,20 +615,24 @@ export default function CaseDetailPage() {
                 type="button"
                 onClick={(e) => handleReviewAction(e, "request_info")}
                 disabled={submittingReview}
-                className="border rounded-md px-4 py-2 hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-medium text-blue-300 transition hover:bg-blue-500/20"
               >
                 Request Info
               </button>
             </div>
 
             {reviewMessage && (
-              <p className="text-sm text-gray-300">{reviewMessage}</p>
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
+                <p className="text-sm font-medium text-emerald-300">
+                  {reviewMessage}
+                </p>
+              </div>
             )}
           </form>
         </div>
       )}
 
-      <div className="border rounded-lg p-4 space-y-4">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
         <h2 className="text-xl font-semibold">Key Extracted Fields</h2>
 
         {priorityFields.length === 0 ? (
@@ -539,8 +640,8 @@ export default function CaseDetailPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {priorityFields.map((field) => (
-              <div key={field.id} className="border rounded p-3">
-                <p className="text-sm text-gray-400">
+              <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                <p className="text-sm text-slate-400">
                   {formatFieldLabel(field.field_name)}
                 </p>
 
@@ -567,7 +668,7 @@ export default function CaseDetailPage() {
                     )}
                 </p>
 
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="mt-1 text-xs text-slate-500">
                   Confidence: {field.confidence ?? "N/A"}
                 </p>
               </div>
@@ -580,7 +681,7 @@ export default function CaseDetailPage() {
             <button
               type="button"
               onClick={() => setShowAllFields(!showAllFields)}
-              className="border rounded-md px-3 py-2 text-sm hover:bg-gray-800"
+              className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
             >
               {showAllFields
                 ? "Hide other extracted fields"
@@ -590,14 +691,14 @@ export default function CaseDetailPage() {
             {showAllFields && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 {otherFields.map((field) => (
-                  <div key={field.id} className="border rounded p-3">
-                    <p className="text-sm text-gray-400">
+                  <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                    <p className="text-sm text-slate-400">
                       {formatFieldLabel(field.field_name)}
                     </p>
                     <p className="font-medium break-words">
                       {field.field_value || "—"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-slate-500">
                       Confidence: {field.confidence ?? "N/A"}
                     </p>
                   </div>
@@ -608,19 +709,19 @@ export default function CaseDetailPage() {
         )}
       </div>
 
-      <div className="border rounded-lg p-4 space-y-2">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
         <h2 className="text-xl font-semibold">Files</h2>
         {caseDetail.files.length === 0 ? (
           <p>No files found.</p>
         ) : (
           caseDetail.files.map((file) => (
-            <div key={file.id} className="border rounded p-3">
+            <div key={file.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
               <p><strong>File Name:</strong> {file.file_name}</p>
               <a
                 href={file.blob_url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-blue-400 underline"
+                className="text-emerald-400 underline-offset-4 hover:underline"
               >
                 Open File
               </a>
@@ -629,17 +730,17 @@ export default function CaseDetailPage() {
         )}
       </div>
 
-      <div className="border rounded-lg p-4 space-y-2">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
         <h2 className="text-xl font-semibold">Decision History</h2>
         {caseDetail.decisions.length === 0 ? (
           <p>No decisions found.</p>
         ) : (
           <div className="space-y-2">
             {caseDetail.decisions.map((decision) => (
-              <div key={decision.id} className="border rounded p-3">
+              <div key={decision.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
                 <p><strong>Outcome:</strong> {decision.outcome}</p>
                 <p><strong>Reason:</strong> {decision.reason}</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-slate-400">
                   {new Date(decision.decided_at).toLocaleString()}
                 </p>
               </div>
@@ -648,7 +749,7 @@ export default function CaseDetailPage() {
         )}
       </div>
 
-      <div className="border rounded-lg p-4 space-y-2">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
         <h2 className="text-xl font-semibold">Operational Audit Timeline</h2>
 
         <p className="text-sm text-slate-400 mb-4">
@@ -686,5 +787,6 @@ export default function CaseDetailPage() {
         )}
       </div>
     </div>
-  );
+  </main>
+);
 }
