@@ -351,6 +351,13 @@ def get_analytics_summary(
     return AnalyticsService.get_summary(db)
 
 
+@router.get("/analytics/recent-activity")
+def get_recent_activity(
+    db: Session = Depends(get_db),
+):
+    return AnalyticsService.get_recent_activity(db)
+
+
 @router.get("/cases/{case_id}")
 def get_case_detail(case_id: int, db: Session = Depends(get_db)):
     case = db.query(Case).filter(Case.id == case_id).first()
