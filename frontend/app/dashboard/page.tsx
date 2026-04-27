@@ -8,6 +8,7 @@ type AnalyticsSummary = {
   rejected_cases: number;
   pending_review_cases: number;
   awaiting_information_cases: number;
+  overdue_review_cases: number;
 };
 
 type RecentActivity = {
@@ -97,6 +98,11 @@ export default function DashboardPage() {
       value: summary.awaiting_information_cases,
       description: "Cases paused pending more information",
     },
+    {
+      label: "Overdue Reviews",
+      value: summary.overdue_review_cases,
+      description: "Pending review tasks older than 48 hours",
+    },
   ];
 
   return (
@@ -115,7 +121,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
+        <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-6">
           {cards.map((card) => (
             <div
               key={card.label}
