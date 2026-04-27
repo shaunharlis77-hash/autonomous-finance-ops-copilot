@@ -9,6 +9,8 @@ type AnalyticsSummary = {
   pending_review_cases: number;
   awaiting_information_cases: number;
   overdue_review_cases: number;
+  approval_rate: number;
+  rejection_rate: number;
 };
 
 type RecentActivity = {
@@ -103,6 +105,16 @@ export default function DashboardPage() {
       value: summary.overdue_review_cases,
       description: "Pending review tasks older than 48 hours",
     },
+    {
+      label: "Approval Rate",
+      value: `${summary.approval_rate}%`,
+      description: "Percentage of cases approved by the workflow",
+    },
+    {
+      label: "Rejection Rate",
+      value: `${summary.rejection_rate}%`,
+      description: "Percentage of cases rejected by validation or review",
+    },
   ];
 
   return (
@@ -121,7 +133,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-6">
+        <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
             <div
               key={card.label}
