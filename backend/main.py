@@ -10,6 +10,7 @@ from app.models.case_file import CaseFile  # noqa: F401
 from app.models.extracted_field import ExtractedField  # noqa: F401
 from app.models.decision import Decision  # noqa: F401
 from app.models.audit_event import AuditEvent  # noqa: F401
+from app.models.review_task import ReviewTask  # noqa: F401
 
 Base.metadata.create_all(bind=engine)
 

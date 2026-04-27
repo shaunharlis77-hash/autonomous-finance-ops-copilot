@@ -11,6 +11,16 @@ class DocumentIntelligenceService:
             credential=AzureKeyCredential(settings.azure_document_intelligence_key)
         )
 
+    def _normalize_currency_code(self, field, extracted_currency_code):
+        raw_content = (getattr(field, "content", "") or "").strip()
+
+        # Stronger South African Rand heuristic:
+        # if displayed amount starts with "R", treat it as ZAR
+        if raw_content.startswith("R"):
+            return "ZAR"
+
+        return extracted_currency_code
+
     def _safe_field_value(self, field):
         if not field:
             return None
@@ -30,13 +40,29 @@ class DocumentIntelligenceService:
             "value_country_region",
             "value_array",
             "value_object",
-            "values",
         ]
 
         for attr in candidate_attrs:
             if hasattr(field, attr):
                 value = getattr(field, attr)
                 if value is not None:
+                    if attr == "value_currency":
+                        try:
+                            amount = getattr(value, "amount", None)
+                            currency_code = getattr(value, "currency_code", None)
+
+                            currency_code = self._normalize_currency_code(
+                                field,
+                                currency_code
+                            )
+
+                            return {
+                                "amount": amount,
+                                "currencyCode": currency_code,
+                            }
+                        except Exception:
+                            return str(value)
+
                     return value
 
         if hasattr(field, "content") and field.content is not None:
