@@ -11,6 +11,7 @@ type AnalyticsSummary = {
   overdue_review_cases: number;
   approval_rate: number;
   rejection_rate: number;
+  escalation_rate: number;
   pending_review_tasks: number;
   resolved_review_tasks: number;
   assigned_review_tasks: number;
@@ -80,11 +81,6 @@ export default function DashboardPage() {
 
   const cards = [
     {
-      label: "Total Cases",
-      value: summary.total_cases,
-      description: "All finance cases processed by the platform",
-    },
-    {
       label: "Approved",
       value: summary.approved_cases,
       description: "Cases approved automatically or by reviewers",
@@ -100,14 +96,9 @@ export default function DashboardPage() {
       description: "Cases waiting for human review",
     },
     {
-      label: "Awaiting Information",
-      value: summary.awaiting_information_cases,
-      description: "Cases paused pending more information",
-    },
-    {
-      label: "Overdue Reviews",
-      value: summary.overdue_review_cases,
-      description: "Pending review tasks older than 48 hours",
+      label: "Resolved Reviews",
+      value: summary.resolved_review_tasks,
+      description: "Human review tasks completed by reviewers",
     },
     {
       label: "Approval Rate",
@@ -120,15 +111,20 @@ export default function DashboardPage() {
       description: "Percentage of cases rejected by validation or review",
     },
     {
+      label: "Escalation Rate",
+      value: `${summary.escalation_rate}%`,
+      description: "Percentage of cases routed to human review",
+    },
+    {
       label: "Review Tasks",
       value: summary.pending_review_tasks,
       description: "Open human review tasks requiring attention",
     },
     {
-      label: "Resolved Reviews",
-      value: summary.resolved_review_tasks,
-      description: "Human review tasks completed by reviewers",
-    },
+      label: "Awaiting Information",
+      value: summary.awaiting_information_cases,
+      description: "Cases paused pending more information",
+    }, 
     {
       label: "Assigned Reviews",
       value: summary.assigned_review_tasks,
@@ -139,23 +135,48 @@ export default function DashboardPage() {
       value: summary.unassigned_review_tasks,
       description: "Pending review tasks without reviewer ownership",
     },
+    {
+      label: "Overdue Reviews",
+      value: summary.overdue_review_cases,
+      description: "Pending review tasks older than 48 hours",
+    },
   ];
 
   return (
     <main className="min-h-screen bg-slate-950 p-8 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
-            Autonomous Finance Operations Copilot
-          </p>
-          <h1 className="mt-2 text-4xl font-bold tracking-tight">
-            Executive Operations Dashboard
-          </h1>
-          <p className="mt-3 max-w-3xl text-slate-300">
-            Real-time overview of invoice processing, workflow decisions, human
-            review status, and operational throughput.
-          </p>
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
+              Autonomous Finance Operations Copilot
+            </p>
+
+            <h1 className="mt-2 text-4xl font-bold tracking-tight">
+              Executive Operations Dashboard
+            </h1>
+
+            <p className="mt-3 max-w-3xl text-slate-300">
+              Real-time overview of invoice processing, workflow decisions, human
+              review status, and operational throughput.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 px-6 py-5 shadow-lg min-w-[220px]">
+            <p className="text-sm text-slate-400">
+              Total Cases
+            </p>
+
+            <p className="mt-2 text-4xl font-bold">
+              {summary.total_cases}
+            </p>
+
+            <p className="mt-2 text-sm text-slate-400">
+              All finance cases processed by the platform
+            </p>
+          </div>
         </div>
+
+        <div className="my-8 border-t border-slate-800" />
 
         <section className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
@@ -163,7 +184,15 @@ export default function DashboardPage() {
               key={card.label}
               className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg"
             >
-              <p className="text-sm text-slate-400">{card.label}</p>
+              <p
+                className={`text-sm ${
+                  card.label === "Overdue Reviews"
+                    ? "text-amber-400 font-medium"
+                    : "text-slate-400"
+                }`}
+              >
+                {card.label}
+              </p>
               <p className="mt-3 text-4xl font-bold">{card.value}</p>
               <p className="mt-3 text-sm leading-5 text-slate-400">
                 {card.description}
