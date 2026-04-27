@@ -31,7 +31,7 @@ def build_decision_graph():
         {
             "human_review": "human_review",
             "finalize": "finalize",
-        }
+        },
     )
 
     graph.add_edge("human_review", END)

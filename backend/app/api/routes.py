@@ -21,11 +21,12 @@ from app.workflows.decision_graph import build_decision_graph
 
 router = APIRouter()
 
-def log_audit_event(db: Session, case_id: int, event_type: str, event_detail: str = None):
+
+def log_audit_event(
+    db: Session, case_id: int, event_type: str, event_detail: str = None
+):
     audit_event = AuditEvent(
-        case_id=case_id,
-        event_type=event_type,
-        event_detail=event_detail
+        case_id=case_id, event_type=event_type, event_detail=event_detail
     )
     db.add(audit_event)
     db.commit()
@@ -37,7 +38,7 @@ def log_audit_event(db: Session, case_id: int, event_type: str, event_detail: st
 def health_check():
     return {
         "status": "ok",
-        "message": "Autonomous Finance Ops Copilot backend is running"
+        "message": "Autonomous Finance Ops Copilot backend is running",
     }
 
 
@@ -63,37 +64,27 @@ async def create_case_with_file(
     db.refresh(new_case)
 
     log_audit_event(
-        db,
-        new_case.id,
-        "case_created",
-        f"Case created for {new_case.case_type}"
+        db, new_case.id, "case_created", f"Case created for {new_case.case_type}"
     )
 
     blob_service = BlobStorageService()
     blob_name = f"{new_case.id}-{uuid4()}-{file.filename}"
 
     from io import BytesIO
-    upload_stream = UploadFile(
-        filename=file.filename,
-        file=BytesIO(file_bytes)
-    )
+
+    upload_stream = UploadFile(filename=file.filename, file=BytesIO(file_bytes))
 
     file_url = await blob_service.upload_file(upload_stream, blob_name)
 
     new_case_file = CaseFile(
-        case_id=new_case.id,
-        file_name=file.filename,
-        blob_url=file_url
+        case_id=new_case.id, file_name=file.filename, blob_url=file_url
     )
     db.add(new_case_file)
     db.commit()
     db.refresh(new_case_file)
 
     log_audit_event(
-        db,
-        new_case.id,
-        "file_uploaded",
-        f"Uploaded file: {new_case_file.file_name}"
+        db, new_case.id, "file_uploaded", f"Uploaded file: {new_case_file.file_name}"
     )
 
     extraction_result = {}
@@ -106,10 +97,7 @@ async def create_case_with_file(
         extraction_result = doc_service.extract_invoice_data(file_bytes)
 
         log_audit_event(
-            db,
-            new_case.id,
-            "extraction_completed",
-            "Invoice extraction completed"
+            db, new_case.id, "extraction_completed", "Invoice extraction completed"
         )
 
         decision_graph = build_decision_graph()
@@ -133,21 +121,13 @@ async def create_case_with_file(
             db,
             new_case.id,
             "validation_completed",
-            f"Validation result: {validation_result}"
+            f"Validation result: {validation_result}",
         )
 
-        log_audit_event(
-            db,
-            new_case.id,
-            "risk_scored",
-            f"Risk result: {risk_result}"
-        )
+        log_audit_event(db, new_case.id, "risk_scored", f"Risk result: {risk_result}")
 
         log_audit_event(
-            db,
-            new_case.id,
-            "decision_graph_completed",
-            f"Graph trace: {graph_trace}"
+            db, new_case.id, "decision_graph_completed", f"Graph trace: {graph_trace}"
         )
 
         if requires_human_review:
@@ -155,7 +135,7 @@ async def create_case_with_file(
                 db,
                 new_case.id,
                 "human_review_required",
-                "Decision graph routed case to human review checkpoint"
+                "Decision graph routed case to human review checkpoint",
             )
 
         if decision_result["decision"] == "approve":
@@ -175,13 +155,13 @@ async def create_case_with_file(
             db,
             new_case.id,
             "case_status_updated",
-            f"Case moved to status={new_case.status}, stage={new_case.current_stage}"
+            f"Case moved to status={new_case.status}, stage={new_case.current_stage}",
         )
-        
+
         decision_record = Decision(
             case_id=new_case.id,
             outcome=decision_result["decision"],
-            reason=decision_result["reason"]
+            reason=decision_result["reason"],
         )
         db.add(decision_record)
         db.commit()
@@ -191,14 +171,11 @@ async def create_case_with_file(
             db,
             new_case.id,
             "decision_recorded",
-            f"Decision recorded: {decision_record.outcome}"
+            f"Decision recorded: {decision_record.outcome}",
         )
 
         if decision_result["decision"] == "escalate":
-            review_task = ReviewTask(
-                case_id=new_case.id,
-                status="pending"
-            )
+            review_task = ReviewTask(case_id=new_case.id, status="pending")
             db.add(review_task)
             db.commit()
             db.refresh(review_task)
@@ -207,7 +184,7 @@ async def create_case_with_file(
                 db,
                 new_case.id,
                 "review_task_created",
-                f"Review task created with status={review_task.status}"
+                f"Review task created with status={review_task.status}",
             )
 
         n8n_result = {}
@@ -232,12 +209,8 @@ async def create_case_with_file(
         n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
         log_audit_event(
-            db,
-            new_case.id,
-            "n8n_notified",
-            f"n8n webhook result: {n8n_result}"
+            db, new_case.id, "n8n_notified", f"n8n webhook result: {n8n_result}"
         )
-
 
         for field_name, field_data in extraction_result.get("fields", {}).items():
             field_value = field_data.get("value")
@@ -295,7 +268,9 @@ async def create_case_with_file(
                     ExtractedField(
                         case_id=new_case.id,
                         field_name=field_name,
-                        field_value=str(field_value) if field_value is not None else None,
+                        field_value=(
+                            str(field_value) if field_value is not None else None
+                        ),
                         confidence=confidence,
                     )
                 )
@@ -338,8 +313,9 @@ async def create_case_with_file(
             }
             for event in audit_events
         ],
-        "n8n_result": n8n_result,   
+        "n8n_result": n8n_result,
     }
+
 
 @router.post("/cases/{case_id}/review")
 async def review_case(
@@ -365,7 +341,7 @@ async def review_case(
     if action not in allowed_actions:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid action. Must be one of: {', '.join(allowed_actions)}"
+            detail=f"Invalid action. Must be one of: {', '.join(allowed_actions)}",
         )
 
     if action == "approve":
@@ -381,17 +357,15 @@ async def review_case(
     elif action == "request_info":
         case.status = "awaiting_information"
         case.current_stage = "waiting_on_submitter"
-        decision_reason = comment or f"More information requested by reviewer {reviewer_name}"
+        decision_reason = (
+            comment or f"More information requested by reviewer {reviewer_name}"
+        )
 
     review_task.status = "resolved"
     review_task.assigned_to = reviewer_name
     review_task.reviewer_comment = comment
 
-    decision_record = Decision(
-        case_id=case.id,
-        outcome=action,
-        reason=decision_reason
-    )
+    decision_record = Decision(case_id=case.id, outcome=action, reason=decision_reason)
     db.add(decision_record)
 
     db.commit()
@@ -403,7 +377,7 @@ async def review_case(
         db,
         case.id,
         "review_completed",
-        f"Reviewer {reviewer_name} completed review with action={action}. Comment: {comment or 'No comment provided'}"
+        f"Reviewer {reviewer_name} completed review with action={action}. Comment: {comment or 'No comment provided'}",
     )
 
     n8n_service = N8NService()
@@ -423,12 +397,7 @@ async def review_case(
     }
     n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
-    log_audit_event(
-        db,
-        case.id,
-        "n8n_notified",
-        f"n8n webhook result: {n8n_result}"
-    )
+    log_audit_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
 
     return {
         "message": "Review action recorded successfully",
@@ -448,8 +417,9 @@ async def review_case(
             "outcome": decision_record.outcome,
             "reason": decision_record.reason,
             "decided_at": decision_record.decided_at,
-        }
+        },
     }
+
 
 @router.get("/cases")
 def list_cases(db: Session = Depends(get_db)):
@@ -469,6 +439,7 @@ def list_cases(db: Session = Depends(get_db)):
         for case in cases
     ]
 
+
 @router.get("/cases/{case_id}")
 def get_case_detail(case_id: int, db: Session = Depends(get_db)):
     case = db.query(Case).filter(Case.id == case_id).first()
@@ -476,9 +447,21 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Case not found")
 
     case_files = db.query(CaseFile).filter(CaseFile.case_id == case_id).all()
-    extracted_fields = db.query(ExtractedField).filter(ExtractedField.case_id == case_id).all()
-    decisions = db.query(Decision).filter(Decision.case_id == case_id).order_by(Decision.id.desc()).all()
-    audit_events = db.query(AuditEvent).filter(AuditEvent.case_id == case_id).order_by(AuditEvent.id.desc()).all()
+    extracted_fields = (
+        db.query(ExtractedField).filter(ExtractedField.case_id == case_id).all()
+    )
+    decisions = (
+        db.query(Decision)
+        .filter(Decision.case_id == case_id)
+        .order_by(Decision.id.desc())
+        .all()
+    )
+    audit_events = (
+        db.query(AuditEvent)
+        .filter(AuditEvent.case_id == case_id)
+        .order_by(AuditEvent.id.desc())
+        .all()
+    )
     review_task = db.query(ReviewTask).filter(ReviewTask.case_id == case_id).first()
 
     return {
@@ -542,6 +525,7 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
         ),
     }
 
+
 @router.post("/cases/{case_id}/assign")
 async def assign_review_task(
     case_id: int,
@@ -565,10 +549,7 @@ async def assign_review_task(
     db.refresh(review_task)
 
     log_audit_event(
-        db,
-        case.id,
-        "review_task_assigned",
-        f"Review task assigned to {reviewer_name}"
+        db, case.id, "review_task_assigned", f"Review task assigned to {reviewer_name}"
     )
 
     reviewer_email_map = {
@@ -593,12 +574,7 @@ async def assign_review_task(
 
     n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
-    log_audit_event(
-        db,
-        case.id,
-        "n8n_notified",
-        f"n8n webhook result: {n8n_result}"
-    )
+    log_audit_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
     return {
         "message": "Review task assigned successfully",
         "review_task": {

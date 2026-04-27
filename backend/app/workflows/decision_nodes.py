@@ -7,9 +7,7 @@ from app.workflows.graph_state import DecisionGraphState
 def validate_fields_node(state: DecisionGraphState) -> DecisionGraphState:
     validator = ValidationService()
 
-    validation_result = validator.validate_invoice(
-        state.get("extracted_data", {})
-    )
+    validation_result = validator.validate_invoice(state.get("extracted_data", {}))
 
     trace = state.get("trace", [])
     trace.append("validate_fields_node completed")

@@ -14,10 +14,7 @@ from app.models.review_task import ReviewTask  # noqa: F401
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="Autonomous Finance Operations Copilot API",
-    version="0.1.0"
-)
+app = FastAPI(title="Autonomous Finance Operations Copilot API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,5 +31,5 @@ app.include_router(api_router)
 def root():
     return {
         "app": "Autonomous Finance Operations Copilot API",
-        "environment": settings.environment
+        "environment": settings.environment,
     }
