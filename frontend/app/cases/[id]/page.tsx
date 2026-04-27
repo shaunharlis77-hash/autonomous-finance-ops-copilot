@@ -649,18 +649,37 @@ export default function CaseDetailPage() {
       </div>
 
       <div className="border rounded-lg p-4 space-y-2">
-        <h2 className="text-xl font-semibold">Audit Trail</h2>
+        <h2 className="text-xl font-semibold">Operational Audit Timeline</h2>
+
+        <p className="text-sm text-slate-400 mb-4">
+          Complete workflow trace including validation, decisions, review actions,
+          automation events, and system orchestration history.
+        </p>
+
         {caseDetail.audit_events.length === 0 ? (
           <p>No audit events found.</p>
         ) : (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
             {caseDetail.audit_events.map((event) => (
-              <div key={event.id} className="border rounded p-3">
-                <p><strong>{event.event_type}</strong></p>
-                <p className="break-words">{event.event_detail}</p>
-                <p className="text-sm text-gray-400">
-                  {new Date(event.created_at).toLocaleString()}
-                </p>
+              <div
+                key={event.id}
+                className="border border-slate-800 rounded-xl bg-slate-950 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">
+                      {formatStatus(event.event_type)}
+                    </p>
+
+                    <p className="mt-1 text-sm text-slate-400 break-words">
+                      {event.event_detail || "No event detail provided"}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    {new Date(event.created_at).toLocaleString()}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
