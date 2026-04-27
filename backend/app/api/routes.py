@@ -19,10 +19,9 @@ from app.services.n8n_service import N8NService
 from app.models.review_task import ReviewTask
 import ast
 from app.workflows.decision_graph import build_decision_graph
+from app.services.review_service import ReviewService
 
 router = APIRouter()
-
-
 
 
 @router.get("/health")
@@ -316,100 +315,13 @@ async def review_case(
     comment: str = Form(None),
     db: Session = Depends(get_db),
 ):
-    case = db.query(Case).filter(Case.id == case_id).first()
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
-
-    review_task = (
-        db.query(ReviewTask)
-        .filter(ReviewTask.case_id == case_id, ReviewTask.status == "pending")
-        .first()
+    return await ReviewService.process_review_action(
+        db=db,
+        case_id=case_id,
+        action=action,
+        reviewer_name=reviewer_name,
+        comment=comment,
     )
-    if not review_task:
-        raise HTTPException(status_code=404, detail="Pending review task not found")
-
-    allowed_actions = ["approve", "reject", "request_info"]
-    if action not in allowed_actions:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid action. Must be one of: {', '.join(allowed_actions)}",
-        )
-
-    if action == "approve":
-        case.status = "approved"
-        case.current_stage = "completed"
-        decision_reason = comment or f"Case approved by reviewer {reviewer_name}"
-
-    elif action == "reject":
-        case.status = "rejected"
-        case.current_stage = "closed"
-        decision_reason = comment or f"Case rejected by reviewer {reviewer_name}"
-
-    elif action == "request_info":
-        case.status = "awaiting_information"
-        case.current_stage = "waiting_on_submitter"
-        decision_reason = (
-            comment or f"More information requested by reviewer {reviewer_name}"
-        )
-
-    review_task.status = "resolved"
-    review_task.assigned_to = reviewer_name
-    review_task.reviewer_comment = comment
-
-    decision_record = Decision(case_id=case.id, outcome=action, reason=decision_reason)
-    db.add(decision_record)
-
-    db.commit()
-    db.refresh(case)
-    db.refresh(review_task)
-    db.refresh(decision_record)
-
-    AuditService.log_event(
-        db,
-        case.id,
-        "review_completed",
-        f"Reviewer {reviewer_name} completed review with action={action}. Comment: {comment or 'No comment provided'}",
-    )
-
-    n8n_service = N8NService()
-    n8n_payload = {
-        "event_type": "case_review_completed",
-        "case_id": case.id,
-        "case_type": case.case_type,
-        "submitter_name": case.submitter_name,
-        "submitter_email": case.submitter_email,
-        "status": case.status,
-        "current_stage": case.current_stage,
-        "review_action": action,
-        "reviewer_name": reviewer_name,
-        "review_comment": comment,
-        "decision_id": decision_record.id,
-        "timestamp": str(decision_record.decided_at),
-    }
-    n8n_result = await n8n_service.send_decision_event(n8n_payload)
-
-    AuditService.log_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
-
-    return {
-        "message": "Review action recorded successfully",
-        "case": {
-            "id": case.id,
-            "status": case.status,
-            "current_stage": case.current_stage,
-        },
-        "review_task": {
-            "id": review_task.id,
-            "status": review_task.status,
-            "assigned_to": review_task.assigned_to,
-            "reviewer_comment": review_task.reviewer_comment,
-        },
-        "decision_record": {
-            "id": decision_record.id,
-            "outcome": decision_record.outcome,
-            "reason": decision_record.reason,
-            "decided_at": decision_record.decided_at,
-        },
-    }
 
 
 @router.get("/cases")
