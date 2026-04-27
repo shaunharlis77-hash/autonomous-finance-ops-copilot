@@ -75,6 +75,68 @@ function formatFieldLabel(fieldName: string) {
   );
 }
 
+function formatStatus(status: string) {
+  return status.replaceAll("_", " ");
+}
+
+function getCaseAge(createdAt: string) {
+  const ageHours = Math.floor(
+    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)
+  );
+
+  if (ageHours < 24) {
+    return `${ageHours}h old`;
+  }
+
+  const ageDays = Math.floor(ageHours / 24);
+  return `${ageDays}d old`;
+}
+
+function getPriorityBadge(status: string, createdAt: string) {
+  const ageHours =
+    (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+
+  if (status === "pending_review" && ageHours >= 48) {
+    return {
+      label: "Overdue Review",
+      className: "border-red-500/40 bg-red-500/10 text-red-300",
+    };
+  }
+
+  if (status === "pending_review") {
+    return {
+      label: "High Priority",
+      className: "border-amber-500/40 bg-amber-500/10 text-amber-300",
+    };
+  }
+
+  if (status === "awaiting_information") {
+    return {
+      label: "Awaiting Information",
+      className: "border-blue-500/40 bg-blue-500/10 text-blue-300",
+    };
+  }
+
+  if (status === "approved") {
+    return {
+      label: "Completed",
+      className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+    };
+  }
+
+  if (status === "rejected") {
+    return {
+      label: "Closed",
+      className: "border-slate-500/40 bg-slate-500/10 text-slate-300",
+    };
+  }
+
+  return {
+    label: "Normal",
+    className: "border-slate-500/40 bg-slate-500/10 text-slate-300",
+  };
+}
+
 export default function CaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
@@ -244,14 +306,47 @@ export default function CaseDetailPage() {
     return <div className="p-6">Case not found.</div>;
   }
 
+  const priorityBadge = getPriorityBadge(
+    caseDetail.case.status,
+    caseDetail.case.created_at
+  );
+
+  const caseAge = getCaseAge(caseDetail.case.created_at);
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="space-y-3">
         <div>
-          <h1 className="text-2xl font-bold">Case #{caseDetail.case.id}</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Full case review and audit history
+          <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
+            Finance Operations
           </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Case #{caseDetail.case.id}
+            </h1>
+
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${priorityBadge.className}`}
+            >
+              {priorityBadge.label}
+            </span>
+          </div>
+
+          <p className="mt-3 text-slate-300">
+            {caseDetail.case.case_type} submitted by{" "}
+            <span className="font-medium">
+              {caseDetail.case.submitter_name}
+            </span>
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
+            <span>Status: {formatStatus(caseDetail.case.status)}</span>
+            <span>•</span>
+            <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
+            <span>•</span>
+            <span>{caseAge}</span>
+          </div>
         </div>
 
         {showCurrencyWarning && (
@@ -272,50 +367,68 @@ export default function CaseDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="border rounded-lg p-4 space-y-2">
-          <h2 className="text-xl font-semibold">Case Summary</h2>
-          <p><strong>Type:</strong> {caseDetail.case.case_type}</p>
-          <p><strong>Submitter:</strong> {caseDetail.case.submitter_name}</p>
-          <p><strong>Email:</strong> {caseDetail.case.submitter_email}</p>
-          <p>
-            <strong>Status:</strong>{" "}
-            <span className="inline-block border rounded px-2 py-1 text-sm">
-              {caseDetail.case.status}
-            </span>
-          </p>
-          <p>
-            <strong>Stage:</strong>{" "}
-            <span className="inline-block border rounded px-2 py-1 text-sm">
-              {caseDetail.case.current_stage}
-            </span>
-          </p>
-          <p>
-            <strong>Created:</strong>{" "}
-            {new Date(caseDetail.case.created_at).toLocaleString()}
-          </p>
-        </div>
+        <div className="border rounded-lg p-4 space-y-4">
+          <h2 className="text-xl font-semibold">Operational Context</h2>
 
-        <div className="border rounded-lg p-4 space-y-2">
-          <h2 className="text-xl font-semibold">Review Task</h2>
-          {caseDetail.review_task ? (
-            <>
-              <p><strong>Status:</strong> {caseDetail.review_task.status}</p>
-              <p>
-                <strong>Assigned To:</strong>{" "}
-                {caseDetail.review_task.assigned_to || "Unassigned"}
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-slate-400">Submitter Email</p>
+              <p className="font-medium">{caseDetail.case.submitter_email}</p>
+            </div>
+
+            <div>
+              <p className="text-slate-400">Current Workflow State</p>
+              <p className="font-medium">
+                {formatStatus(caseDetail.case.status)} →{" "}
+                {formatStatus(caseDetail.case.current_stage)}
               </p>
-              <p>
-                <strong>Comment:</strong>{" "}
-                {caseDetail.review_task.reviewer_comment || "—"}
+            </div>
+
+            <div>
+              <p className="text-slate-400">Operational Priority</p>
+              <p className="font-medium">{priorityBadge.label}</p>
+            </div>
+
+            <div>
+              <p className="text-slate-400">Case Age</p>
+              <p className="font-medium">{caseAge}</p>
+            </div>
+          </div>
+        </div>
+        <div className="border rounded-lg p-4 space-y-4">
+          <h2 className="text-xl font-semibold">Review Ownership</h2>
+
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-slate-400">Review Status</p>
+              <p className="font-medium">
+                {formatStatus(caseDetail.review_task?.status || "pending")}
               </p>
-              <p className="text-sm text-gray-400">
-                Created:{" "}
-                {new Date(caseDetail.review_task.created_at).toLocaleString()}
+            </div>
+
+            <div>
+              <p className="text-slate-400">Assigned Reviewer</p>
+              <p className="font-medium">
+                {caseDetail.review_task?.assigned_to || "Unassigned"}
               </p>
-            </>
-          ) : (
-            <p>No review task for this case.</p>
-          )}
+            </div>
+
+            <div>
+              <p className="text-slate-400">Reviewer Notes</p>
+              <p className="font-medium">
+                {caseDetail.review_task?.reviewer_comment || "No reviewer comment yet"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-slate-400">Review Created</p>
+              <p className="font-medium">
+                {caseDetail.review_task?.created_at
+                  ? new Date(caseDetail.review_task.created_at).toLocaleString()
+                  : "Not available"}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
