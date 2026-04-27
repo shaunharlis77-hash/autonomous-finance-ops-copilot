@@ -1,6 +1,9 @@
+from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.models.case import Case
+from app.models.review_task import ReviewTask
 
 
 class AnalyticsService:
@@ -20,13 +23,26 @@ class AnalyticsService:
             db.query(Case).filter(Case.status == "awaiting_information").count()
         )
 
+        sla_cutoff = datetime.utcnow() - timedelta(hours=48)
+
+        overdue_review_cases = (
+            db.query(ReviewTask)
+            .filter(
+                ReviewTask.status == "pending",
+                ReviewTask.created_at < sla_cutoff,
+            )
+            .count()
+        )
+
         return {
             "total_cases": total_cases,
             "approved_cases": approved_cases,
             "rejected_cases": rejected_cases,
             "pending_review_cases": pending_review_cases,
             "awaiting_information_cases": awaiting_information_cases,
+            "overdue_review_cases": overdue_review_cases,
         }
+    
     
     @staticmethod
     def get_recent_activity(db: Session):
