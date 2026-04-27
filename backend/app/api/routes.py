@@ -14,6 +14,7 @@ from app.services.risk_scoring import RiskScoringService
 from app.services.decision import DecisionService
 from app.models.decision import Decision
 from app.models.audit_event import AuditEvent
+from app.services.audit_service import AuditService
 from app.services.n8n_service import N8NService
 from app.models.review_task import ReviewTask
 import ast
@@ -22,16 +23,6 @@ from app.workflows.decision_graph import build_decision_graph
 router = APIRouter()
 
 
-def log_audit_event(
-    db: Session, case_id: int, event_type: str, event_detail: str = None
-):
-    audit_event = AuditEvent(
-        case_id=case_id, event_type=event_type, event_detail=event_detail
-    )
-    db.add(audit_event)
-    db.commit()
-    db.refresh(audit_event)
-    return audit_event
 
 
 @router.get("/health")
@@ -63,7 +54,7 @@ async def create_case_with_file(
     db.commit()
     db.refresh(new_case)
 
-    log_audit_event(
+    AuditService.log_event(
         db, new_case.id, "case_created", f"Case created for {new_case.case_type}"
     )
 
@@ -83,7 +74,7 @@ async def create_case_with_file(
     db.commit()
     db.refresh(new_case_file)
 
-    log_audit_event(
+    AuditService.log_event(
         db, new_case.id, "file_uploaded", f"Uploaded file: {new_case_file.file_name}"
     )
 
@@ -96,7 +87,7 @@ async def create_case_with_file(
         doc_service = DocumentIntelligenceService()
         extraction_result = doc_service.extract_invoice_data(file_bytes)
 
-        log_audit_event(
+        AuditService.log_event(
             db, new_case.id, "extraction_completed", "Invoice extraction completed"
         )
 
@@ -117,21 +108,21 @@ async def create_case_with_file(
         graph_trace = graph_result.get("trace", [])
         requires_human_review = graph_result.get("requires_human_review", False)
 
-        log_audit_event(
+        AuditService.log_event(
             db,
             new_case.id,
             "validation_completed",
             f"Validation result: {validation_result}",
         )
 
-        log_audit_event(db, new_case.id, "risk_scored", f"Risk result: {risk_result}")
+        AuditService.log_event(db, new_case.id, "risk_scored", f"Risk result: {risk_result}")
 
-        log_audit_event(
+        AuditService.log_event(
             db, new_case.id, "decision_graph_completed", f"Graph trace: {graph_trace}"
         )
 
         if requires_human_review:
-            log_audit_event(
+            AuditService.log_event(
                 db,
                 new_case.id,
                 "human_review_required",
@@ -151,7 +142,7 @@ async def create_case_with_file(
         db.commit()
         db.refresh(new_case)
 
-        log_audit_event(
+        AuditService.log_event(
             db,
             new_case.id,
             "case_status_updated",
@@ -167,7 +158,7 @@ async def create_case_with_file(
         db.commit()
         db.refresh(decision_record)
 
-        log_audit_event(
+        AuditService.log_event(
             db,
             new_case.id,
             "decision_recorded",
@@ -180,7 +171,7 @@ async def create_case_with_file(
             db.commit()
             db.refresh(review_task)
 
-            log_audit_event(
+            AuditService.log_event(
                 db,
                 new_case.id,
                 "review_task_created",
@@ -208,7 +199,7 @@ async def create_case_with_file(
         }
         n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
-        log_audit_event(
+        AuditService.log_event(
             db, new_case.id, "n8n_notified", f"n8n webhook result: {n8n_result}"
         )
 
@@ -373,7 +364,7 @@ async def review_case(
     db.refresh(review_task)
     db.refresh(decision_record)
 
-    log_audit_event(
+    AuditService.log_event(
         db,
         case.id,
         "review_completed",
@@ -397,7 +388,7 @@ async def review_case(
     }
     n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
-    log_audit_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
+    AuditService.log_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
 
     return {
         "message": "Review action recorded successfully",
@@ -548,7 +539,7 @@ async def assign_review_task(
     db.commit()
     db.refresh(review_task)
 
-    log_audit_event(
+    AuditService.log_event(
         db, case.id, "review_task_assigned", f"Review task assigned to {reviewer_name}"
     )
 
@@ -574,7 +565,7 @@ async def assign_review_task(
 
     n8n_result = await n8n_service.send_decision_event(n8n_payload)
 
-    log_audit_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
+    AuditService.log_event(db, case.id, "n8n_notified", f"n8n webhook result: {n8n_result}")
     return {
         "message": "Review task assigned successfully",
         "review_task": {
