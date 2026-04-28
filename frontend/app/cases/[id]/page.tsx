@@ -46,6 +46,16 @@ type CaseDetail = {
     created_at: string;
     resolved_at: string | null;
   } | null;
+  graph_state?: {
+  workflow_status: string;
+  current_stage: string;
+  trace: string[];
+  state_payload?: {
+    decision_result?: {
+      source?: string;
+    };
+  };
+};
 };
 
 const priorityFieldOrder = [
@@ -377,416 +387,465 @@ export default function CaseDetailPage() {
     <main className="min-h-screen bg-slate-950 p-8 text-white">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="space-y-3">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
-            Finance Operations
-          </p>
-
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Case #{caseDetail.case.id}
-            </h1>
-
-            <span
-              className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${priorityBadge.className}`}
-            >
-              {priorityBadge.label}
-            </span>
-          </div>
-
-          <p className="mt-3 text-slate-300">
-            {caseDetail.case.case_type} submitted by{" "}
-            <span className="font-medium">
-              {caseDetail.case.submitter_name}
-            </span>
-          </p>
-
-          <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-            <span
-              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
-                caseDetail.case.status
-              )}`}
-            >
-              Status: {formatStatus(caseDetail.case.status)}
-            </span>
-            <span>•</span>
-            <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
-            <span>•</span>
-            <span>{caseAge}</span>
-          </div>
-        </div>
-
-        {showCurrencyWarning && (
-          <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
-            <p className="text-lg font-semibold text-yellow-300">
-              Currency extraction warning
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
+              Finance Operations
             </p>
-            <p className="text-sm text-yellow-200 mt-1">
-              Extracted currency is <strong>{extractedCurrency}</strong>, but this
-              case may require manual verification. Expected demo currency is{" "}
-              <strong>{expectedCurrency}</strong>.
-            </p>
-            <p className="text-xs text-yellow-200/80 mt-2">
-              Model confidence does not guarantee correctness.
-            </p>
-          </div>
-        )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-          <h2 className="text-xl font-semibold">Operational Context</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <h1 className="text-4xl font-bold tracking-tight">
+                Case #{caseDetail.case.id}
+              </h1>
 
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="text-slate-400">Submitter Email</p>
-              <p className="font-medium">{caseDetail.case.submitter_email}</p>
-            </div>
-
-            <div>
-              <p className="text-slate-400">Current Workflow State</p>
-              <span className="inline-flex rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
-                {getWorkflowStateLabel(
-                  caseDetail.case.status,
-                  caseDetail.case.current_stage
-                )}
+              <span
+                className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${priorityBadge.className}`}
+              >
+                {priorityBadge.label}
               </span>
             </div>
 
-            <div>
-              <p className="text-slate-400">Operational Priority</p>
-              <p className="font-medium">{priorityBadge.label}</p>
-            </div>
+            <p className="mt-3 text-slate-300">
+              {caseDetail.case.case_type} submitted by{" "}
+              <span className="font-medium">
+                {caseDetail.case.submitter_name}
+              </span>
+            </p>
 
-            <div>
-              <p className="text-slate-400">Case Age</p>
-              <p className="font-medium">{caseAge}</p>
+            <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
+              <span
+                className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
+                  caseDetail.case.status
+                )}`}
+              >
+                Status: {formatStatus(caseDetail.case.status)}
+              </span>
+              <span>•</span>
+              <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
+              <span>•</span>
+              <span>{caseAge}</span>
             </div>
           </div>
-        </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-          <h2 className="text-xl font-semibold">Review Ownership</h2>
-          {reviewIsOverdue && (
-            <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
-              <p className="text-sm font-semibold text-red-300">
-                SLA Warning: Review overdue
+
+          {showCurrencyWarning && (
+            <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
+              <p className="text-lg font-semibold text-yellow-300">
+                Currency extraction warning
               </p>
-              <p className="mt-1 text-sm text-red-200/80">
-                This review task has been pending for more than 24 hours and should be
-                prioritized.
+              <p className="text-sm text-yellow-200 mt-1">
+                Extracted currency is <strong>{extractedCurrency}</strong>, but this
+                case may require manual verification. Expected demo currency is{" "}
+                <strong>{expectedCurrency}</strong>.
+              </p>
+              <p className="text-xs text-yellow-200/80 mt-2">
+                Model confidence does not guarantee correctness.
               </p>
             </div>
           )}
+        </div>
 
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="text-slate-400">Review Status</p>
-              <p className="font-medium">
-                {formatStatus(caseDetail.review_task?.status || "pending")}
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-semibold">Operational Context</h2>
+
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-slate-400">Submitter Email</p>
+                <p className="font-medium">{caseDetail.case.submitter_email}</p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Current Workflow State</p>
+                <span className="inline-flex rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
+                  {getWorkflowStateLabel(
+                    caseDetail.case.status,
+                    caseDetail.case.current_stage
+                  )}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Operational Priority</p>
+                <p className="font-medium">{priorityBadge.label}</p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Case Age</p>
+                <p className="font-medium">{caseAge}</p>
+              </div>
             </div>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-semibold">Graph Orchestration State</h2>
 
-            <div>
-              <p className="text-slate-400">Assigned Reviewer</p>
-              <p className="font-medium">
-                {caseDetail.review_task?.assigned_to || "Unassigned"}
-              </p>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-slate-400">Workflow Status</p>
+                <p className="font-medium">
+                  {caseDetail.graph_state?.workflow_status || "Not available"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Current Graph Stage</p>
+                <p className="font-medium">
+                  {caseDetail.graph_state?.current_stage || "Not available"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Reviewer Decision Source</p>
+                <p className="font-medium">
+                  {caseDetail.graph_state?.state_payload?.decision_result?.source || "System"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Execution Trace</p>
+                <div className="space-y-2">
+                  {caseDetail.graph_state?.trace?.length ? (
+                    caseDetail.graph_state.trace.map(
+                      (step: string, index: number) => (
+                        <div
+                          key={index}
+                          className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
+                        >
+                          {step}
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <p className="text-sm text-slate-400">
+                      No graph trace available
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div>
-              <p className="text-slate-400">Reviewer Notes</p>
-              <p className="font-medium">
-                {caseDetail.review_task?.reviewer_comment || "No reviewer comment yet"}
-              </p>
-            </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-semibold">Review Ownership</h2>
+            {reviewIsOverdue && (
+              <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+                <p className="text-sm font-semibold text-red-300">
+                  SLA Warning: Review overdue
+                </p>
+                <p className="mt-1 text-sm text-red-200/80">
+                  This review task has been pending for more than 24 hours and should be
+                  prioritized.
+                </p>
+              </div>
+            )}
 
-            <div>
-              <p className="text-slate-400">Review Created</p>
-              <p className="font-medium">
-                {caseDetail.review_task?.created_at
-                  ? new Date(caseDetail.review_task.created_at).toLocaleString()
-                  : "Not available"}
-              </p>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-slate-400">Review Status</p>
+                <p className="font-medium">
+                  {formatStatus(caseDetail.review_task?.status || "pending")}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Assigned Reviewer</p>
+                <p className="font-medium">
+                  {caseDetail.review_task?.assigned_to || "Unassigned"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Reviewer Notes</p>
+                <p className="font-medium">
+                  {caseDetail.review_task?.reviewer_comment || "No reviewer comment yet"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Review Created</p>
+                <p className="font-medium">
+                  {caseDetail.review_task?.created_at
+                    ? new Date(caseDetail.review_task.created_at).toLocaleString()
+                    : "Not available"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {caseDetail.review_task && caseDetail.review_task.status === "pending" && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-6">
-          <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+        {caseDetail.review_task && caseDetail.review_task.status === "pending" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-6">
+            <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Assign Reviewer</h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  Assign ownership before a reviewer takes action.
+                </p>
+              </div>
+
+              <form className="space-y-4" onSubmit={handleAssignTask}>
+                <div>
+                  <label className="mb-1 block text-sm text-slate-300">Assign To</label>
+                  <input
+                    type="text"
+                    value={assigneeName}
+                    onChange={(e) => setAssigneeName(e.target.value)}
+                    disabled={reviewerLocked}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={assigningTask || reviewerLocked}
+                  className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-emerald-300"
+                >
+                  {reviewerLocked ? "Reviewer Assigned" : "Assign Task"}
+                </button>
+
+                {reviewerLocked && (
+                  <p className="text-sm text-slate-400">
+                    Ownership is locked because this task is already assigned to{" "}
+                    <span className="font-medium text-slate-200">
+                      {caseDetail.review_task?.assigned_to}
+                    </span>
+                    .
+                  </p>
+                )}
+
+                {assignmentMessage && (
+                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
+                    <p className="text-sm font-medium text-emerald-300">
+                      {assignmentMessage}
+                    </p>
+                  </div>
+                )}
+              </form>
+            </div>
+
             <div>
-              <h3 className="text-lg font-semibold">Assign Reviewer</h3>
+              <h2 className="text-xl font-semibold">Reviewer Actions</h2>
               <p className="mt-1 text-sm text-slate-400">
-                Assign ownership before a reviewer takes action.
+                Resolve this case directly from the UI.
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleAssignTask}>
+            <form className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Assign To</label>
+                <label className="mb-1 block text-sm text-slate-300">
+                  Reviewer Name
+                </label>
                 <input
                   type="text"
-                  value={assigneeName}
-                  onChange={(e) => setAssigneeName(e.target.value)}
-                  disabled={reviewerLocked}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={assigningTask || reviewerLocked}
-                className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-400 hover:text-emerald-300"
-              >
-                {reviewerLocked ? "Reviewer Assigned" : "Assign Task"}
-              </button>
+              <div>
+                <label className="mb-1 block text-sm text-slate-300">Comment</label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="Add reviewer notes..."
+                  className="min-h-[140px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
+                />
+              </div>
 
-              {reviewerLocked && (
-                <p className="text-sm text-slate-400">
-                  Ownership is locked because this task is already assigned to{" "}
-                  <span className="font-medium text-slate-200">
-                    {caseDetail.review_task?.assigned_to}
-                  </span>
-                  .
-                </p>
-              )}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={(e) => handleReviewAction(e, "approve")}
+                  disabled={submittingReview}
+                  className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+                >
+                  Approve
+                </button>
 
-              {assignmentMessage && (
+                <button
+                  type="button"
+                  onClick={(e) => handleReviewAction(e, "reject")}
+                  disabled={submittingReview}
+                  className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/20"
+                >
+                  Reject
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => handleReviewAction(e, "request_info")}
+                  disabled={submittingReview}
+                  className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-medium text-blue-300 transition hover:bg-blue-500/20"
+                >
+                  Request Info
+                </button>
+              </div>
+
+              {reviewMessage && (
                 <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
                   <p className="text-sm font-medium text-emerald-300">
-                    {assignmentMessage}
+                    {reviewMessage}
                   </p>
                 </div>
               )}
             </form>
           </div>
+        )}
 
-          <div>
-            <h2 className="text-xl font-semibold">Reviewer Actions</h2>
-            <p className="mt-1 text-sm text-slate-400">
-              Resolve this case directly from the UI.
-            </p>
-          </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+          <h2 className="text-xl font-semibold">Key Extracted Fields</h2>
 
-          <form className="space-y-4">
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">
-                Reviewer Name
-              </label>
-              <input
-                type="text"
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
-              />
-            </div>
+          {priorityFields.length === 0 ? (
+            <p>No extracted fields found.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {priorityFields.map((field) => (
+                <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                  <p className="text-sm text-slate-400">
+                    {formatFieldLabel(field.field_name)}
+                  </p>
 
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Comment</label>
-              <textarea
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="Add reviewer notes..."
-                className="min-h-[140px] w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={(e) => handleReviewAction(e, "approve")}
-                disabled={submittingReview}
-                className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
-              >
-                Approve
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => handleReviewAction(e, "reject")}
-                disabled={submittingReview}
-                className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-300 transition hover:bg-red-500/20"
-              >
-                Reject
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => handleReviewAction(e, "request_info")}
-                disabled={submittingReview}
-                className="rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-medium text-blue-300 transition hover:bg-blue-500/20"
-              >
-                Request Info
-              </button>
-            </div>
-
-            {reviewMessage && (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
-                <p className="text-sm font-medium text-emerald-300">
-                  {reviewMessage}
-                </p>
-              </div>
-            )}
-          </form>
-        </div>
-      )}
-
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-        <h2 className="text-xl font-semibold">Key Extracted Fields</h2>
-
-        {priorityFields.length === 0 ? (
-          <p>No extracted fields found.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {priorityFields.map((field) => (
-              <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <p className="text-sm text-slate-400">
-                  {formatFieldLabel(field.field_name)}
-                </p>
-
-                <p className="font-medium break-words">
-                  {field.field_name === "SubTotalAmount"
-                    ? getCombinedAmountDisplay(
+                  <p className="font-medium break-words">
+                    {field.field_name === "SubTotalAmount"
+                      ? getCombinedAmountDisplay(
                         "SubTotalAmount",
                         "SubTotalCurrencyCode"
                       )
-                    : field.field_name === "InvoiceTotalAmount"
-                    ? getCombinedAmountDisplay(
-                        "InvoiceTotalAmount",
-                        "InvoiceTotalCurrencyCode"
-                      )
-                    : field.field_value || "—"}
+                      : field.field_name === "InvoiceTotalAmount"
+                        ? getCombinedAmountDisplay(
+                          "InvoiceTotalAmount",
+                          "InvoiceTotalCurrencyCode"
+                        )
+                        : field.field_value || "—"}
 
-                  {(field.field_name === "SubTotalAmount" ||
-                    field.field_name === "InvoiceTotalAmount") &&
-                    extractedCurrency &&
-                    extractedCurrency !== expectedCurrency && (
-                      <span className="ml-2 text-xs text-yellow-300 border border-yellow-500 rounded px-2 py-0.5">
-                        Verify currency
-                      </span>
-                    )}
-                </p>
+                    {(field.field_name === "SubTotalAmount" ||
+                      field.field_name === "InvoiceTotalAmount") &&
+                      extractedCurrency &&
+                      extractedCurrency !== expectedCurrency && (
+                        <span className="ml-2 text-xs text-yellow-300 border border-yellow-500 rounded px-2 py-0.5">
+                          Verify currency
+                        </span>
+                      )}
+                  </p>
 
-                <p className="mt-1 text-xs text-slate-500">
-                  Confidence: {field.confidence ?? "N/A"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {otherFields.length > 0 && (
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => setShowAllFields(!showAllFields)}
-              className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
-            >
-              {showAllFields
-                ? "Hide other extracted fields"
-                : "Show other extracted fields"}
-            </button>
-
-            {showAllFields && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {otherFields.map((field) => (
-                  <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                    <p className="text-sm text-slate-400">
-                      {formatFieldLabel(field.field_name)}
-                    </p>
-                    <p className="font-medium break-words">
-                      {field.field_value || "—"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Confidence: {field.confidence ?? "N/A"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-        <h2 className="text-xl font-semibold">Files</h2>
-        {caseDetail.files.length === 0 ? (
-          <p>No files found.</p>
-        ) : (
-          caseDetail.files.map((file) => (
-            <div key={file.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-              <p><strong>File Name:</strong> {file.file_name}</p>
-              <a
-                href={file.blob_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-emerald-400 underline-offset-4 hover:underline"
-              >
-                Open File
-              </a>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-        <h2 className="text-xl font-semibold">Decision History</h2>
-        {caseDetail.decisions.length === 0 ? (
-          <p>No decisions found.</p>
-        ) : (
-          <div className="space-y-2">
-            {caseDetail.decisions.map((decision) => (
-              <div key={decision.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <p><strong>Outcome:</strong> {decision.outcome}</p>
-                <p><strong>Reason:</strong> {decision.reason}</p>
-                <p className="text-sm text-slate-400">
-                  {new Date(decision.decided_at).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
-        <h2 className="text-xl font-semibold">Operational Audit Timeline</h2>
-
-        <p className="text-sm text-slate-400 mb-4">
-          Complete workflow trace including validation, decisions, review actions,
-          automation events, and system orchestration history.
-        </p>
-
-        {caseDetail.audit_events.length === 0 ? (
-          <p>No audit events found.</p>
-        ) : (
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-            {caseDetail.audit_events.map((event) => (
-              <div
-                key={event.id}
-                className="border border-slate-800 rounded-xl bg-slate-950 p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">
-                      {formatStatus(event.event_type)}
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-400 break-words">
-                      {event.event_detail || "No event detail provided"}
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-slate-500">
-                    {new Date(event.created_at).toLocaleString()}
+                  <p className="mt-1 text-xs text-slate-500">
+                    Confidence: {field.confidence ?? "N/A"}
                   </p>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {otherFields.length > 0 && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAllFields(!showAllFields)}
+                className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
+              >
+                {showAllFields
+                  ? "Hide other extracted fields"
+                  : "Show other extracted fields"}
+              </button>
+
+              {showAllFields && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {otherFields.map((field) => (
+                    <div key={field.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                      <p className="text-sm text-slate-400">
+                        {formatFieldLabel(field.field_name)}
+                      </p>
+                      <p className="font-medium break-words">
+                        {field.field_value || "—"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Confidence: {field.confidence ?? "N/A"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+          <h2 className="text-xl font-semibold">Files</h2>
+          {caseDetail.files.length === 0 ? (
+            <p>No files found.</p>
+          ) : (
+            caseDetail.files.map((file) => (
+              <div key={file.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                <p><strong>File Name:</strong> {file.file_name}</p>
+                <a
+                  href={file.blob_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-emerald-400 underline-offset-4 hover:underline"
+                >
+                  Open File
+                </a>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+          <h2 className="text-xl font-semibold">Decision History</h2>
+          {caseDetail.decisions.length === 0 ? (
+            <p>No decisions found.</p>
+          ) : (
+            <div className="space-y-2">
+              {caseDetail.decisions.map((decision) => (
+                <div key={decision.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                  <p><strong>Outcome:</strong> {decision.outcome}</p>
+                  <p><strong>Reason:</strong> {decision.reason}</p>
+                  <p className="text-sm text-slate-400">
+                    {new Date(decision.decided_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+          <h2 className="text-xl font-semibold">Operational Audit Timeline</h2>
+
+          <p className="text-sm text-slate-400 mb-4">
+            Complete workflow trace including validation, decisions, review actions,
+            automation events, and system orchestration history.
+          </p>
+
+          {caseDetail.audit_events.length === 0 ? (
+            <p>No audit events found.</p>
+          ) : (
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+              {caseDetail.audit_events.map((event) => (
+                <div
+                  key={event.id}
+                  className="border border-slate-800 rounded-xl bg-slate-950 p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">
+                        {formatStatus(event.event_type)}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-400 break-words">
+                        {event.event_detail || "No event detail provided"}
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-slate-500">
+                      {new Date(event.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  </main>
-);
+    </main>
+  );
 }

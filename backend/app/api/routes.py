@@ -397,6 +397,11 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
     )
     review_task = db.query(ReviewTask).filter(ReviewTask.case_id == case_id).first()
 
+    graph_state = GraphStateService.get_latest_state(
+        db=db,
+        case_id=case_id,
+    )
+
     return {
         "case": {
             "id": case.id,
@@ -454,6 +459,20 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
                 "resolved_at": review_task.resolved_at,
             }
             if review_task
+            else None
+        ),
+        "graph_state": (
+            {
+                "id": graph_state.id,
+                "case_id": graph_state.case_id,
+                "workflow_status": graph_state.workflow_status,
+                "current_stage": graph_state.current_stage,
+                "trace": graph_state.trace,
+                "state_payload": graph_state.state_payload,
+                "created_at": graph_state.created_at,
+                "updated_at": graph_state.updated_at,
+            }
+            if graph_state
             else None
         ),
     }
