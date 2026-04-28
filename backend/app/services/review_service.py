@@ -7,6 +7,7 @@ from app.models.decision import Decision
 from app.services.audit_service import AuditService
 from app.services.n8n_service import N8NService
 from app.workflows.decision_nodes import resume_after_review_node
+from app.services.graph_state_service import GraphStateService
 
 
 class ReviewService:
@@ -88,12 +89,18 @@ class ReviewService:
             }
         )
 
+        GraphStateService.save_state(
+            db=db,
+            case_id=case.id,
+            state_payload=resume_state,
+        )
+
         AuditService.log_event(
             db,
             case.id,
             "decision_graph_resumed",
             (
-                "Graph resumed after human review. "
+                "Graph resumed and state persisted after human review. "
                 f"Reviewer decision={action}. "
                 f"Workflow status={resume_state.get('workflow_status')}. "
                 f"Trace={resume_state.get('trace')}"
