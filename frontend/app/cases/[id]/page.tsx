@@ -53,6 +53,7 @@ type CaseDetail = {
   state_payload?: {
     decision_result?: {
       source?: string;
+      outcome?: string;
     };
   };
 };
@@ -522,7 +523,7 @@ export default function CaseDetailPage() {
               </div>
             </div>
           </div>
-
+          
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
             <h2 className="text-xl font-semibold">Review Ownership</h2>
             {reviewIsOverdue && (
@@ -553,18 +554,41 @@ export default function CaseDetailPage() {
               </div>
 
               <div>
-                <p className="text-slate-400">Reviewer Notes</p>
-                <p className="font-medium">
-                  {caseDetail.review_task?.reviewer_comment || "No reviewer comment yet"}
-                </p>
-              </div>
-
-              <div>
                 <p className="text-slate-400">Review Created</p>
                 <p className="font-medium">
                   {caseDetail.review_task?.created_at
                     ? new Date(caseDetail.review_task.created_at).toLocaleString()
                     : "Not available"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-semibold">Workflow Resolution Summary</h2>
+
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-slate-400">Reviewer Final Action</p>
+                <p className="font-medium">
+                  {caseDetail.graph_state?.state_payload?.decision_result?.outcome ||
+                    "System decision"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Resolution Source</p>
+                <p className="font-medium">
+                  {caseDetail.graph_state?.state_payload?.decision_result?.source ===
+                  "human_review"
+                    ? "Resolved through human review"
+                    : "Resolved automatically by workflow"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Reviewer Comment</p>
+                <p className="font-medium">
+                  {caseDetail.review_task?.reviewer_comment || "No reviewer comment recorded"}
                 </p>
               </div>
             </div>

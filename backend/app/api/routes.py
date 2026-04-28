@@ -339,6 +339,38 @@ async def review_case(
         comment=comment,
     )
 
+@router.get("/reviews")
+def get_review_queue(db: Session = Depends(get_db)):
+    review_tasks = (
+        db.query(ReviewTask, Case)
+        .join(Case, ReviewTask.case_id == Case.id)
+        .order_by(ReviewTask.created_at.desc())
+        .all()
+    )
+
+    return [
+        {
+            "review_task": {
+                "id": task.id,
+                "case_id": task.case_id,
+                "assigned_to": task.assigned_to,
+                "status": task.status,
+                "reviewer_comment": task.reviewer_comment,
+                "created_at": task.created_at,
+                "resolved_at": task.resolved_at,
+            },
+            "case": {
+                "id": case.id,
+                "case_type": case.case_type,
+                "submitter_name": case.submitter_name,
+                "submitter_email": case.submitter_email,
+                "status": case.status,
+                "current_stage": case.current_stage,
+                "created_at": case.created_at,
+            },
+        }
+        for task, case in review_tasks
+    ]
 
 @router.get("/cases")
 def list_cases(db: Session = Depends(get_db)):
