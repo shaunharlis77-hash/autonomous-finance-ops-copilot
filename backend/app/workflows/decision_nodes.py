@@ -67,25 +67,25 @@ def make_decision_node(state: DecisionGraphState) -> DecisionGraphState:
 
 def human_review_required_node(state: DecisionGraphState) -> DecisionGraphState:
     trace = state.get("trace", [])
-    trace.append("human_review_required_node reached")
+    trace.append("human_review_required")
 
-    return {
-        **state,
-        "current_stage": "pending_human_review",
-        "requires_human_review": True,
-        "trace": trace,
-    }
+    state["current_stage"] = "human_review"
+    state["workflow_status"] = "paused_for_human_review"
+    state["requires_human_review"] = True
+    state["review_status"] = "pending"
+
+    return state
 
 
 def finalize_case_node(state: DecisionGraphState) -> DecisionGraphState:
     trace = state.get("trace", [])
-    trace.append("finalize_case_node completed")
+    trace.append("workflow_finalized")
 
-    return {
-        **state,
-        "current_stage": "finalized",
-        "trace": trace,
-    }
+    state["current_stage"] = "finalized"
+    state["workflow_status"] = "completed"
+    state["requires_human_review"] = False
+
+    return state
 
 
 def decision_router(state: DecisionGraphState) -> str:
@@ -95,3 +95,25 @@ def decision_router(state: DecisionGraphState) -> str:
         return "human_review"
 
     return "finalize"
+
+
+def resume_after_review_node(
+    state: DecisionGraphState,
+) -> DecisionGraphState:
+    trace = state.get("trace", [])
+    trace.append("workflow_resumed_after_review")
+
+    reviewer_decision = state.get("reviewer_decision", "approve")
+
+    state["workflow_status"] = "resumed"
+    state["review_status"] = "resolved"
+    state["requires_human_review"] = False
+
+    state["decision_result"] = {
+        "outcome": reviewer_decision,
+        "source": "human_review",
+    }
+
+    state["current_stage"] = "post_review_resolution"
+
+    return state

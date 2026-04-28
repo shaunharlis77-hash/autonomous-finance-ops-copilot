@@ -6,6 +6,7 @@ from app.models.review_task import ReviewTask
 from app.models.decision import Decision
 from app.services.audit_service import AuditService
 from app.services.n8n_service import N8NService
+from app.workflows.decision_nodes import resume_after_review_node
 
 
 class ReviewService:
@@ -70,6 +71,32 @@ class ReviewService:
             (
                 f"Reviewer {reviewer_name} completed review with action={action}. "
                 f"Comment: {comment or 'No comment provided'}"
+            ),
+        )
+
+        resume_state = resume_after_review_node(
+            {
+                "case_id": case.id,
+                "case_type": case.case_type,
+                "current_stage": case.current_stage,
+                "workflow_status": "paused_for_human_review",
+                "requires_human_review": True,
+                "review_status": "pending",
+                "reviewer_decision": action,
+                "reviewer_comment": comment,
+                "trace": [],
+            }
+        )
+
+        AuditService.log_event(
+            db,
+            case.id,
+            "decision_graph_resumed",
+            (
+                "Graph resumed after human review. "
+                f"Reviewer decision={action}. "
+                f"Workflow status={resume_state.get('workflow_status')}. "
+                f"Trace={resume_state.get('trace')}"
             ),
         )
 
