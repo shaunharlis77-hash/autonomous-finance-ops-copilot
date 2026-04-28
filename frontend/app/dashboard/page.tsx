@@ -16,6 +16,7 @@ type AnalyticsSummary = {
   resolved_review_tasks: number;
   assigned_review_tasks: number;
   unassigned_review_tasks: number;
+  reviewer_workload: { [key: string]: number };
 };
 
 type RecentActivity = {
@@ -213,41 +214,6 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
-              <h2 className="text-xl font-semibold">Reviewer Operations Summary</h2>
-
-              <p className="mt-4 text-slate-300">
-                Human review workload is currently tracking{" "}
-                <span className="font-semibold text-white">
-                  {summary.pending_review_tasks}
-                </span>{" "}
-                open review tasks, with{" "}
-                <span className="font-semibold text-white">
-                  {summary.assigned_review_tasks}
-                </span>{" "}
-                assigned and{" "}
-                <span className="font-semibold text-white">
-                  {summary.unassigned_review_tasks}
-                </span>{" "}
-                still missing ownership.
-              </p>
-
-              <p className="mt-4 text-slate-300">
-                Immediate attention required:{" "}
-                <span className="font-semibold text-amber-400">
-                  {summary.overdue_review_cases}
-                </span>{" "}
-                overdue reviews are currently outside SLA.
-              </p>
-
-              <a
-                href="/reviews"
-                className="mt-5 inline-flex rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
-              >
-                Open Reviewer Work Queue
-              </a>
-            </div>
-
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
               <h2 className="text-xl font-semibold">Quick Navigation</h2>
 
@@ -275,47 +241,97 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <div className="mb-5">
-              <h2 className="text-xl font-semibold">
-                Recent Operational Activity
-              </h2>
-              <p className="mt-1 text-sm text-slate-400">
-                Latest workflow, review, automation, and audit events from the
-                platform.
-              </p>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
+            <h2 className="text-xl font-semibold">Reviewer Operations Summary</h2>
+
+            <p className="mt-4 text-slate-300">
+              Human review workload is currently tracking{" "}
+              <span className="font-semibold text-white">
+                {summary.pending_review_tasks}
+              </span>{" "}
+              open review tasks, with{" "}
+              <span className="font-semibold text-white">
+                {summary.assigned_review_tasks}
+              </span>{" "}
+              assigned and{" "}
+              <span className="font-semibold text-white">
+                {summary.unassigned_review_tasks}
+              </span>{" "}
+              still missing ownership.
+            </p>
+
+            <p className="mt-4 text-slate-300">
+              Immediate attention required:{" "}
+              <span className="font-semibold text-amber-400">
+                {summary.overdue_review_cases}
+              </span>{" "}
+              overdue reviews are currently outside SLA.
+            </p>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                Reviewer Workload
+              </h3>
+
+              <div className="mt-3 space-y-3">
+                {Object.entries(summary.reviewer_workload || {}).map(
+                  ([reviewer, count]) => (
+                    <div
+                      key={reviewer}
+                      className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 px-4 py-3"
+                    >
+                      <span className="font-medium">{reviewer}</span>
+                      <span className="rounded-full border border-slate-700 px-3 py-1 text-sm text-slate-300">
+                        {count} pending
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
 
-            <div className="max-h-[520px] space-y-3 overflow-y-auto pr-2">
-              {recentActivity.length === 0 ? (
-                <p className="text-sm text-slate-400">
-                  No recent activity found.
-                </p>
-              ) : (
-                recentActivity.map((event) => (
-                  <div
-                    key={event.id}
-                    className="rounded-xl border border-slate-800 bg-slate-950 p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium">
-                          Case #{event.case_id} —{" "}
-                          {event.event_type.replaceAll("_", " ")}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-400">
-                          {event.event_detail || "No event detail provided"}
-                        </p>
-                      </div>
+            <a
+              href="/reviews"
+              className="mt-6 inline-flex rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
+            >
+              Open Reviewer Work Queue
+            </a>
+          </div>
+        </section>
 
-                      <p className="text-xs text-slate-500">
-                        {event.created_at}
+        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold">Recent Operational Activity</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Latest workflow, review, automation, and audit events from the platform.
+            </p>
+          </div>
+
+          <div className="max-h-[520px] space-y-3 overflow-y-auto pr-2">
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-slate-400">No recent activity found.</p>
+            ) : (
+              recentActivity.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950 p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">
+                        Case #{event.case_id} —{" "}
+                        {event.event_type.replaceAll("_", " ")}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-400">
+                        {event.event_detail || "No event detail provided"}
                       </p>
                     </div>
+
+                    <p className="text-xs text-slate-500">{event.created_at}</p>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
       </div>

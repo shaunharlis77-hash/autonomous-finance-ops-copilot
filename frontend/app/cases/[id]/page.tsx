@@ -501,6 +501,38 @@ export default function CaseDetailPage() {
             </div>
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
+            <h2 className="text-xl font-semibold">AI Risk Assessment Summary</h2>
+
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="text-slate-400">Risk Signal</p>
+                <p className="font-medium">
+                  {caseDetail.decisions?.[caseDetail.decisions.length - 1]?.reason ||
+                    "No risk reason recorded"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Recommended Action</p>
+                <span className="inline-flex rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+                  {caseDetail.case.status === "pending_review"
+                    ? "Manual Review Required"
+                    : "Review Completed"}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-slate-400">Control Type</p>
+                <p className="font-medium">
+                  Deterministic validation + rule-based risk scoring
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6 xl:grid-cols-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
             <h2 className="text-xl font-semibold">Graph Orchestration State</h2>
 
             <div className="space-y-3 text-sm">
@@ -845,12 +877,33 @@ export default function CaseDetailPage() {
           ) : (
             <div className="space-y-2">
               {caseDetail.decisions.map((decision) => (
-                <div key={decision.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                  <p><strong>Outcome:</strong> {decision.outcome}</p>
-                  <p><strong>Reason:</strong> {decision.reason}</p>
-                  <p className="text-sm text-slate-400">
-                    {new Date(decision.decided_at).toLocaleString()}
-                  </p>
+                <div
+                  key={decision.id}
+                  className="rounded-xl border border-slate-800 bg-slate-950 p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-slate-400">Decision Outcome</p>
+                      <span
+                        className={`mt-1 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
+                          decision.outcome
+                        )}`}
+                      >
+                        {formatStatus(decision.outcome)}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-500">
+                      {new Date(decision.decided_at).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
+                    <p className="text-sm text-slate-400">Decision Reason</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                      {decision.reason || "No decision reason recorded"}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -869,20 +922,24 @@ export default function CaseDetailPage() {
             <p>No audit events found.</p>
           ) : (
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-              {caseDetail.audit_events.map((event) => (
+              {caseDetail.audit_events.map((event, index) => (
                 <div
                   key={event.id}
-                  className="border border-slate-800 rounded-xl bg-slate-950 p-4"
+                  className="relative rounded-xl border border-slate-800 bg-slate-950 p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">
-                        {formatStatus(event.event_type)}
-                      </p>
+                    <div className="flex gap-3">
+                      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-xs font-semibold text-emerald-300">
+                        {caseDetail.audit_events.length - index}
+                      </div>
 
-                      <p className="mt-1 text-sm text-slate-400 break-words">
-                        {event.event_detail || "No event detail provided"}
-                      </p>
+                      <div>
+                        <p className="font-medium">{formatStatus(event.event_type)}</p>
+
+                        <p className="mt-1 text-sm leading-6 text-slate-400 break-words">
+                          {event.event_detail || "No event detail provided"}
+                        </p>
+                      </div>
                     </div>
 
                     <p className="text-xs text-slate-500">
