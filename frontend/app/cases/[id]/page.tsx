@@ -387,43 +387,68 @@ export default function CaseDetailPage() {
   return (
     <main className="min-h-screen bg-slate-950 p-8 text-white">
       <div className="mx-auto max-w-7xl space-y-8">
-        <div className="space-y-3">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
-              Finance Operations
-            </p>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-emerald-400">
+                Finance Operations
+              </p>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Case #{caseDetail.case.id}
-              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <h1 className="text-4xl font-bold tracking-tight">
+                  Case #{caseDetail.case.id}
+                </h1>
 
-              <span
-                className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${priorityBadge.className}`}
-              >
-                {priorityBadge.label}
-              </span>
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${priorityBadge.className}`}
+                >
+                  {priorityBadge.label}
+                </span>
+              </div>
+
+              <p className="mt-3 text-slate-300">
+                {caseDetail.case.case_type} submitted by{" "}
+                <span className="font-medium">
+                  {caseDetail.case.submitter_name}
+                </span>
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
+                    caseDetail.case.status
+                  )}`}
+                >
+                  Status: {formatStatus(caseDetail.case.status)}
+                </span>
+                <span>•</span>
+                <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
+                <span>•</span>
+                <span>{caseAge}</span>
+              </div>
             </div>
 
-            <p className="mt-3 text-slate-300">
-              {caseDetail.case.case_type} submitted by{" "}
-              <span className="font-medium">
-                {caseDetail.case.submitter_name}
-              </span>
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-              <span
-                className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusBadge(
-                  caseDetail.case.status
-                )}`}
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              <a
+                href="/dashboard"
+                className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
               >
-                Status: {formatStatus(caseDetail.case.status)}
-              </span>
-              <span>•</span>
-              <span>Stage: {formatStatus(caseDetail.case.current_stage)}</span>
-              <span>•</span>
-              <span>{caseAge}</span>
+                Dashboard
+              </a>
+
+              <a
+                href="/cases"
+                className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
+              >
+                All Cases
+              </a>
+
+              <a
+                href="/reviews"
+                className="rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
+              >
+                Reviewer Queue
+              </a>
             </div>
           </div>
 
@@ -432,12 +457,12 @@ export default function CaseDetailPage() {
               <p className="text-lg font-semibold text-yellow-300">
                 Currency extraction warning
               </p>
-              <p className="text-sm text-yellow-200 mt-1">
+              <p className="mt-1 text-sm text-yellow-200">
                 Extracted currency is <strong>{extractedCurrency}</strong>, but this
                 case may require manual verification. Expected demo currency is{" "}
                 <strong>{expectedCurrency}</strong>.
               </p>
-              <p className="text-xs text-yellow-200/80 mt-2">
+              <p className="mt-2 text-xs text-yellow-200/80">
                 Model confidence does not guarantee correctness.
               </p>
             </div>

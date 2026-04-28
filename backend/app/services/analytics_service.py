@@ -82,6 +82,18 @@ class AnalyticsService:
             .count()
         )
 
+        reviewer_workload_rows = (
+            db.query(ReviewTask.assigned_to)
+            .filter(ReviewTask.status == "pending")
+            .all()
+        )
+
+        reviewer_workload = {}
+
+        for row in reviewer_workload_rows:
+            reviewer = row.assigned_to or "Unassigned"
+            reviewer_workload[reviewer] = reviewer_workload.get(reviewer, 0) + 1
+
         return {
             "total_cases": total_cases,
             "approved_cases": approved_cases,
@@ -96,6 +108,7 @@ class AnalyticsService:
             "resolved_review_tasks": resolved_review_tasks,
             "assigned_review_tasks": assigned_review_tasks,
             "unassigned_review_tasks": unassigned_review_tasks,
+            "reviewer_workload": reviewer_workload,
         }
     
     

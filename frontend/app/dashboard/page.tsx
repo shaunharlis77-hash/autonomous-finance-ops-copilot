@@ -213,27 +213,62 @@ export default function DashboardPage() {
               </p>
             </div>
 
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg">
+              <h2 className="text-xl font-semibold">Reviewer Operations Summary</h2>
+
+              <p className="mt-4 text-slate-300">
+                Human review workload is currently tracking{" "}
+                <span className="font-semibold text-white">
+                  {summary.pending_review_tasks}
+                </span>{" "}
+                open review tasks, with{" "}
+                <span className="font-semibold text-white">
+                  {summary.assigned_review_tasks}
+                </span>{" "}
+                assigned and{" "}
+                <span className="font-semibold text-white">
+                  {summary.unassigned_review_tasks}
+                </span>{" "}
+                still missing ownership.
+              </p>
+
+              <p className="mt-4 text-slate-300">
+                Immediate attention required:{" "}
+                <span className="font-semibold text-amber-400">
+                  {summary.overdue_review_cases}
+                </span>{" "}
+                overdue reviews are currently outside SLA.
+              </p>
+
+              <a
+                href="/reviews"
+                className="mt-5 inline-flex rounded-xl border border-slate-700 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-400"
+              >
+                Open Reviewer Work Queue
+              </a>
+            </div>
+
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
               <h2 className="text-xl font-semibold">Quick Navigation</h2>
 
               <div className="mt-4 space-y-3">
                 <a
-                  href="/dashboard"
+                  href="/cases"
                   className="block rounded-xl border border-slate-700 p-4 transition hover:border-emerald-400"
                 >
-                  <p className="font-medium">Executive Dashboard</p>
+                  <p className="font-medium">All Cases</p>
                   <p className="text-sm text-slate-400">
-                    Monitor operations performance and workflow metrics
+                    Browse every submitted case across all workflow states
                   </p>
                 </a>
 
                 <a
-                  href="/cases"
+                  href="/reviews"
                   className="block rounded-xl border border-slate-700 p-4 transition hover:border-emerald-400"
                 >
-                  <p className="font-medium">Review Queue</p>
+                  <p className="font-medium">Reviewer Work Queue</p>
                   <p className="text-sm text-slate-400">
-                    Review escalated cases and reviewer assignments
+                    Manage pending reviews, ownership, overdue work, and triage
                   </p>
                 </a>
               </div>

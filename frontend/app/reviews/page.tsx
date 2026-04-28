@@ -151,20 +151,20 @@ export default function ReviewsPage() {
               Open review tasks awaiting resolution
             </p>
           </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg">
-            <p className="text-sm text-slate-400">Resolved Reviews</p>
-            <p className="mt-3 text-4xl font-bold">{resolvedCount}</p>
-            <p className="mt-3 text-sm text-slate-400">
-              Reviews completed by human reviewers
-            </p>
-          </div>
           
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg">
             <p className="text-sm text-slate-400">Unassigned Reviews</p>
             <p className="mt-3 text-4xl font-bold">{unassignedCount}</p>
             <p className="mt-3 text-sm text-slate-400">
               Pending reviews without ownership
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg">
+            <p className="text-sm text-slate-400">Resolved Reviews</p>
+            <p className="mt-3 text-4xl font-bold">{resolvedCount}</p>
+            <p className="mt-3 text-sm text-slate-400">
+              Reviews completed by human reviewers
             </p>
           </div>
 
@@ -227,14 +227,20 @@ export default function ReviewsPage() {
                           </p>
 
                           {overdue && (
-                            <span className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-300">
+                            <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
                               Overdue
                             </span>
                           )}
 
+                          {overdue && item.review_task.assigned_to && (
+                            <span className="rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-300">
+                                High Priority
+                            </span>
+                            )}
+
                           {!item.review_task.assigned_to &&
                             item.review_task.status === "pending" && (
-                              <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+                              <span className="rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
                                 Unassigned
                               </span>
                             )}
