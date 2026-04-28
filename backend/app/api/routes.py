@@ -23,6 +23,7 @@ from app.services.review_service import ReviewService
 from app.services.analytics_service import AnalyticsService
 from app.services.graph_state_service import GraphStateService
 
+
 router = APIRouter()
 
 
@@ -457,6 +458,32 @@ def get_case_detail(case_id: int, db: Session = Depends(get_db)):
         ),
     }
 
+@router.get("/cases/{case_id}/graph-state")
+def get_case_graph_state(
+    case_id: int,
+    db: Session = Depends(get_db),
+):
+    graph_state = GraphStateService.get_latest_state(
+        db=db,
+        case_id=case_id,
+    )
+
+    if not graph_state:
+        raise HTTPException(
+            status_code=404,
+            detail="No graph state found for this case",
+        )
+
+    return {
+        "id": graph_state.id,
+        "case_id": graph_state.case_id,
+        "workflow_status": graph_state.workflow_status,
+        "current_stage": graph_state.current_stage,
+        "trace": graph_state.trace,
+        "state_payload": graph_state.state_payload,
+        "created_at": graph_state.created_at,
+        "updated_at": graph_state.updated_at,
+    }
 
 @router.post("/cases/{case_id}/assign")
 async def assign_review_task(
