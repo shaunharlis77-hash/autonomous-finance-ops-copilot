@@ -21,6 +21,7 @@ import ast
 from app.workflows.decision_graph import build_decision_graph
 from app.services.review_service import ReviewService
 from app.services.analytics_service import AnalyticsService
+from app.services.graph_state_service import GraphStateService
 
 router = APIRouter()
 
@@ -100,6 +101,19 @@ async def create_case_with_file(
                 "extracted_data": extraction_result,
                 "trace": [],
             }
+        )
+
+        GraphStateService.save_state(
+            db=db,
+            case_id=new_case.id,
+            state_payload=graph_result,
+        )
+
+        AuditService.log_event(
+            db,
+            new_case.id,
+            "graph_state_persisted",
+            f"Graph state persisted with workflow_status={graph_result.get('workflow_status')}",
         )
 
         validation_result = graph_result.get("validation_result", {})
