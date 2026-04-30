@@ -1,6 +1,8 @@
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
+from pydantic import BaseModel
+from fastapi import Body
 from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
@@ -22,6 +24,12 @@ from app.workflows.decision_graph import build_decision_graph
 from app.services.review_service import ReviewService
 from app.services.analytics_service import AnalyticsService
 from app.services.graph_state_service import GraphStateService
+
+
+class ExternalAuditEventRequest(BaseModel):
+    case_id: int
+    event_type: str
+    event_detail: str
 
 
 router = APIRouter()
@@ -547,3 +555,26 @@ async def assign_review_task(
         case_id=case_id,
         reviewer_name=reviewer_name,
     )
+
+@router.post("/audit/external-event")
+def log_external_audit_event(
+    payload: ExternalAuditEventRequest = Body(...),
+    db: Session = Depends(get_db),
+):
+    case = db.query(Case).filter(Case.id == payload.case_id).first()
+
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    AuditService.log_event(
+        db=db,
+        case_id=payload.case_id,
+        event_type=payload.event_type,
+        event_detail=payload.event_detail,
+    )
+
+    return {
+        "message": "External audit event logged successfully",
+        "case_id": payload.case_id,
+        "event_type": payload.event_type,
+    }

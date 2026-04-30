@@ -199,6 +199,56 @@ function isReviewOverdue(createdAt: string) {
   return hoursElapsed >= 24;
 }
 
+function getAuditEventStyle(eventType: string) {
+  if (eventType === "payment_process_initiated") {
+    return {
+      label: "Payment Process Initiated",
+      badge: "Finance Workflow",
+      icon: "💳",
+      cardClass: "border-amber-500/40 bg-amber-950/20",
+      badgeClass: "border-amber-500/40 bg-amber-500/10 text-amber-300",
+    };
+  }
+
+if (eventType === "payment_approval_requested") {
+  return {
+    label: "Payment Approval Requested",
+    badge: "Approval Requested",
+    icon: "📨",
+    cardClass: "border-sky-500/40 bg-sky-950/20",
+    badgeClass: "border-sky-500/40 bg-sky-500/10 text-sky-300",
+  };
+}  
+
+if (eventType === "payment_approved_by_finance") {
+  return {
+    label: "Payment Approved by Finance",
+    badge: "Finance Approval",
+    icon: "📩",
+    cardClass: "border-blue-500/40 bg-blue-950/20",
+    badgeClass: "border-blue-500/40 bg-blue-500/10 text-blue-300",
+  };
+}
+
+  if (eventType === "payment_completed") {
+    return {
+      label: "Payment Completed",
+      badge: "Finance Authorized",
+      icon: "✅",
+      cardClass: "border-emerald-500/40 bg-emerald-950/20",
+      badgeClass: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+    };
+  }
+
+  return {
+    label: formatStatus(eventType),
+    badge: "Audit Event",
+    icon: null,
+    cardClass: "border-slate-800 bg-slate-950",
+    badgeClass: "border-slate-700 bg-slate-900 text-slate-300",
+  };
+}
+
 export default function CaseDetailPage() {
   const params = useParams();
   const caseId = params.id as string;
@@ -234,44 +284,54 @@ export default function CaseDetailPage() {
     fetchCaseDetail();
   }, [caseId]);
 
-  const invoiceTotalCurrencyField = caseDetail?.extracted_fields.find(
-    (field) => field.field_name === "InvoiceTotalCurrencyCode"
-  );
+const formatAmountOnly = (value?: string | null) => {
+  if (!value) return "—";
 
-  const subTotalCurrencyField = caseDetail?.extracted_fields.find(
-    (field) => field.field_name === "SubTotalCurrencyCode"
-  );
+  const cleaned = String(value)
+    .replace(/[^\d.,-]/g, "")
+    .replace(",", ".");
 
-  const extractedCurrency =
-    invoiceTotalCurrencyField?.field_value?.toUpperCase() ||
-    subTotalCurrencyField?.field_value?.toUpperCase() ||
-    null;
+  const numericValue = Number(cleaned);
 
-  const showCurrencyWarning =
-    !!extractedCurrency && extractedCurrency !== expectedCurrency;
+  if (Number.isNaN(numericValue)) {
+    return value;
+  }
 
-  const getCombinedAmountDisplay = (
-    amountFieldName: string,
-    currencyFieldName: string
-  ) => {
-    if (!caseDetail) return "—";
+  return new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+};
 
-    const amountField = caseDetail.extracted_fields.find(
-      (field) => field.field_name === amountFieldName
-    );
-    const currencyField = caseDetail.extracted_fields.find(
-      (field) => field.field_name === currencyFieldName
-    );
+const getAmountDisplay = (amountFieldName: string) => {
+  if (!caseDetail) return "—";
 
-    const amount = amountField?.field_value;
-    const currency = currencyField?.field_value;
+const amountField = caseDetail.extracted_fields.find(
+  (field) => field.field_name === amountFieldName
+);
 
-    if (!amount && !currency) return "—";
-    if (!currency) return amount || "—";
-    if (!amount) return currency || "—";
+  return formatAmountOnly(amountField?.field_value);
+};
 
-    return `${currency} ${amount}`;
-  };
+const paymentApprovalRequested = caseDetail?.audit_events?.some(
+  (event) => event.event_type === "payment_approval_requested"
+);
+
+const paymentApprovedByFinance = caseDetail?.audit_events?.some(
+  (event) => event.event_type === "payment_approved_by_finance"
+);
+
+const paymentCompleted = caseDetail?.audit_events?.some(
+  (event) => event.event_type === "payment_completed"
+);
+
+const paymentStatus = paymentCompleted
+  ? "Payment completed via finance authorization workflow"
+  : paymentApprovedByFinance
+  ? "Finance authorization granted. Payment completion pending"
+  : paymentApprovalRequested
+  ? "Awaiting finance authorization"
+  : "Payment workflow not started";
 
   const priorityFields = useMemo(() => {
     if (!caseDetail) return [];
@@ -451,23 +511,7 @@ export default function CaseDetailPage() {
               </a>
             </div>
           </div>
-
-          {showCurrencyWarning && (
-            <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5">
-              <p className="text-lg font-semibold text-yellow-300">
-                Currency extraction warning
-              </p>
-              <p className="mt-1 text-sm text-yellow-200">
-                Extracted currency is <strong>{extractedCurrency}</strong>, but this
-                case may require manual verification. Expected demo currency is{" "}
-                <strong>{expectedCurrency}</strong>.
-              </p>
-              <p className="mt-2 text-xs text-yellow-200/80">
-                Model confidence does not guarantee correctness.
-              </p>
-            </div>
-          )}
-        </div>
+        </div>            
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-lg space-y-4">
@@ -643,6 +687,21 @@ export default function CaseDetailPage() {
               </div>
 
               <div>
+                <p className="text-slate-400">Payment Status</p>
+                <p
+                  className={`font-medium ${
+                    paymentCompleted
+                      ? "text-emerald-400"
+                      : paymentApprovalRequested
+                      ? "text-yellow-300"
+                      : "text-slate-300"
+                  }`}
+                >
+                  {paymentStatus}
+                </p>
+              </div>        
+
+              <div>
                 <p className="text-slate-400">Reviewer Comment</p>
                 <p className="font-medium">
                   {caseDetail.review_task?.reviewer_comment || "No reviewer comment recorded"}
@@ -787,25 +846,10 @@ export default function CaseDetailPage() {
 
                   <p className="font-medium break-words">
                     {field.field_name === "SubTotalAmount"
-                      ? getCombinedAmountDisplay(
-                        "SubTotalAmount",
-                        "SubTotalCurrencyCode"
-                      )
+                      ? getAmountDisplay("SubTotalAmount")
                       : field.field_name === "InvoiceTotalAmount"
-                        ? getCombinedAmountDisplay(
-                          "InvoiceTotalAmount",
-                          "InvoiceTotalCurrencyCode"
-                        )
-                        : field.field_value || "—"}
-
-                    {(field.field_name === "SubTotalAmount" ||
-                      field.field_name === "InvoiceTotalAmount") &&
-                      extractedCurrency &&
-                      extractedCurrency !== expectedCurrency && (
-                        <span className="ml-2 text-xs text-yellow-300 border border-yellow-500 rounded px-2 py-0.5">
-                          Verify currency
-                        </span>
-                      )}
+                      ? getAmountDisplay("InvoiceTotalAmount")
+                      : field.field_value || "—"}   
                   </p>
 
                   <p className="mt-1 text-xs text-slate-500">
@@ -922,32 +966,44 @@ export default function CaseDetailPage() {
             <p>No audit events found.</p>
           ) : (
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-              {caseDetail.audit_events.map((event, index) => (
-                <div
-                  key={event.id}
-                  className="relative rounded-xl border border-slate-800 bg-slate-950 p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex gap-3">
-                      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-xs font-semibold text-emerald-300">
-                        {caseDetail.audit_events.length - index}
+              {caseDetail.audit_events.map((event, index) => {
+                const auditStyle = getAuditEventStyle(event.event_type);
+
+                return (
+                  <div
+                    key={event.id}
+                    className={`relative rounded-xl border p-4 ${auditStyle.cardClass}`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="flex gap-3">
+                        <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-xs font-semibold text-emerald-300">
+                          {auditStyle.icon || caseDetail.audit_events.length - index}
+                        </div>
+
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium">{auditStyle.label}</p>
+
+                            <span
+                              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${auditStyle.badgeClass}`}
+                            >
+                              {auditStyle.badge}
+                            </span>
+                          </div>
+
+                          <p className="mt-1 text-sm leading-6 text-slate-400 break-words">
+                            {event.event_detail || "No event detail provided"}
+                          </p>
+                        </div>
                       </div>
 
-                      <div>
-                        <p className="font-medium">{formatStatus(event.event_type)}</p>
-
-                        <p className="mt-1 text-sm leading-6 text-slate-400 break-words">
-                          {event.event_detail || "No event detail provided"}
-                        </p>
-                      </div>
+                      <p className="text-xs text-slate-500">
+                        {new Date(event.created_at).toLocaleString()}
+                      </p>
                     </div>
-
-                    <p className="text-xs text-slate-500">
-                      {new Date(event.created_at).toLocaleString()}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
