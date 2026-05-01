@@ -1,6 +1,6 @@
 # Autonomous Finance Operations Copilot
 
-AI-powered finance workflow platform for invoice processing, risk scoring, human review, and audit traceability.
+AI-powered finance workflow platform for document processing, risk scoring, human review, and audit traceability.
 
 Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 
