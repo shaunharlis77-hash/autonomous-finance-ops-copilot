@@ -1,65 +1,171 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const workflowHighlights = [
+  "AI-assisted invoice extraction and validation",
+  "Risk scoring with approve, reject, and escalate decisions",
+  "Human-in-the-loop review for escalated cases",
+  "n8n workflow automation with email approvals and reminders",
+  "Audit-ready timeline for every operational action",
+];
+
+const platformStats = [
+  { label: "Decision Paths", value: "3", detail: "Approve, reject, escalate" },
+  { label: "Workflow Engine", value: "n8n", detail: "Business process automation" },
+  { label: "Review Model", value: "HITL", detail: "Human-in-the-loop control" },
+  { label: "Traceability", value: "Audit", detail: "End-to-end event history" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="min-h-screen bg-slate-950 text-slate-100">
+      <section className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8">
+        <nav className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-400">
+              Autonomous Finance Operations Copilot
+            </p>
+          </div>
+
+          <div className="hidden gap-3 md:flex">
+            <Link
+              href="/dashboard"
+              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-400 hover:text-emerald-300"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Dashboard
+            </Link>
+            <Link
+              href="/cases"
+              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-400 hover:text-emerald-300"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Cases
+            </Link>
+            <Link
+              href="/reviews"
+              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-400 hover:text-emerald-300"
+            >
+              Reviews
+            </Link>
+          </div>
+        </nav>
+
+        <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <div className="mb-6 inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+              AI decisioning · Human review · n8n automation · Audit traceability
+            </div>
+
+            <h2 className="max-w-4xl text-4xl font-bold tracking-tight text-white md:text-6xl">
+              AI-powered finance workflows with human control and audit traceability.
+            </h2>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              A finance operations platform for invoice processing, risk scoring,
+              reviewer escalation, payment authorization, and end-to-end workflow
+              traceability.
+            </p>
+
+            <p className="mt-4 text-sm text-slate-500">
+              Built with Azure Document Intelligence, FastAPI, PostgreSQL, and n8n workflow automation.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link
+                href="/dashboard"
+                className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+              >
+                Open Dashboard
+              </Link>
+
+              <Link
+                href="/cases"
+                className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 hover:border-emerald-400 hover:text-emerald-300"
+              >
+                View Cases
+              </Link>
+
+              <Link
+                href="/reviews"
+                className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 hover:border-emerald-400 hover:text-emerald-300"
+              >
+                Reviewer Queue
+              </Link>
+
+              <a
+                href="http://localhost:8000/docs"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-slate-800 px-5 py-3 text-sm text-slate-400 hover:border-slate-600 hover:text-slate-300"
+              >
+                API Docs
+              </a>
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-900/40 rounded-3xl">
+            <div className="rounded-2xl border border-slate-800 bg-slate-950 p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Workflow Snapshot
+              </p>
+
+              <div className="mt-5 space-y-4">
+                {[
+                  ["1", "Invoice uploaded", "Document Intelligence extracts invoice fields."],
+                  ["2", "Risk decision generated", "Validation and scoring determine approve, reject, or escalate."],
+                  ["3", "n8n workflow triggered", "Business process automation sends alerts, reminders, and approval emails."],
+                  ["4", "Audit trail updated", "Every operational action is written back to the case timeline."],
+                ].map(([step, title, detail]) => (
+                  <div
+                    key={step}
+                    className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-sm font-bold text-emerald-300">
+                        {step}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">{title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-400">
+                          {detail}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        <p className="mb-4 text-sm uppercase tracking-[0.25em] text-slate-500">
+          Platform Overview
+        </p>
+
+        <section className="grid gap-4 pb-10 md:grid-cols-4">
+          {platformStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+            >
+              <p className="text-sm text-slate-400">{stat.label}</p>
+              <p className="mt-2 text-2xl font-bold text-white">{stat.value}</p>
+              <p className="mt-1 text-sm text-slate-500">{stat.detail}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
+          <h3 className="text-lg font-semibold text-white">What this system demonstrates</h3>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {workflowHighlights.map((item) => (
+              <div key={item} className="flex gap-3 rounded-xl bg-slate-950 p-4">
+                <span className="text-emerald-400">✓</span>
+                <p className="text-sm text-slate-300">{item}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+    </main>
   );
 }
