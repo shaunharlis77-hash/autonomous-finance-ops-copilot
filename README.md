@@ -52,24 +52,31 @@ flowchart TD
 ## Workflow Automation (n8n)
 
 ```mermaid
-flowchart TD
-    START[Case processed by backend] --> DECISION{Decision}
+flowchart LR
+    START[Backend case event] --> DECISION{Decision / Event}
 
-    DECISION -->|Approved| PAYMENT[Payment Workflow]
-    DECISION -->|Rejected| REJECTION[Rejection Workflow]
-    DECISION -->|Escalated| REVIEW[Reviewer Workflow]
-    DECISION -->|Request Info| INFO[Request More Info]
+    DECISION -->|Approved| PAYMENT[Payment approval workflow]
+    DECISION -->|Rejected| REJECT[Rejection workflow]
+    DECISION -->|Escalated| ESC[Escalation workflow]
+    DECISION -->|Reviewer assigned| ASSIGN[Reviewer assignment]
+    DECISION -->|Request info| INFO[More info request]
 
-    REVIEW -->|Assigned| ASSIGNED[Reviewer Assigned]
-    ASSIGNED --> REVIEW_OUTCOME{Reviewer Decision}
+    ESC --> REMINDER[Assignment reminder check]
+    ESC --> ASSIGN
 
-    REVIEW_OUTCOME -->|Approved| PAYMENT
-    REVIEW_OUTCOME -->|Rejected| REJECTION
-    REVIEW_OUTCOME -->|More Info| INFO
+    ASSIGN --> REVIEW{Reviewer outcome}
 
-    PAYMENT --> COMPLETE[Payment Completed]
-    REJECTION --> CLOSED[Case Closed]
-    INFO --> WAITING[Waiting for Input]
+    REVIEW -->|Approved| PAYMENT
+    REVIEW -->|Rejected| REJECT
+    REVIEW -->|More info| INFO
+
+    PAYMENT --> PAY_DONE[Finance authorization + payment completed]
+    REJECT --> REJ_DONE[Submitter notified + case closed]
+    INFO --> INFO_DONE[Submitter asked for supporting info]
+    REMINDER --> AUDIT[Audit timeline updated]
+    PAY_DONE --> AUDIT
+    REJ_DONE --> AUDIT
+    INFO_DONE --> AUDIT
 ```
 ---
 
