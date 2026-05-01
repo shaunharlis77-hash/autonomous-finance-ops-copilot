@@ -20,7 +20,7 @@ Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 ## Architecture
 
 ```mermaid
-flowchart TD
+flowchart LR
     U[User / Submitter] --> FE[Next.js Frontend]
 
     FE --> DASH[Dashboard]
@@ -29,20 +29,19 @@ flowchart TD
 
     FE --> API[FastAPI Backend]
 
-    API --> BLOB[Azure Blob Storage]
-    API --> DI[Azure Document Intelligence]
-    API --> DB[(PostgreSQL)]
-
     API --> ENGINE[Validation + Risk Scoring + Decision Engine]
-    ENGINE --> GRAPH[LangGraph Decision Workflow]
+    ENGINE --> GRAPH[LangGraph Workflow]
 
-    GRAPH --> N8N[n8n Workflow Automation]
+    API --> DI[Azure Document Intelligence]
+    API --> BLOB[Azure Blob Storage]
+
+    GRAPH --> N8N[n8n Automation]
 
     N8N --> EMAIL[Gmail Notifications]
-    N8N --> CALLBACK[Backend Callback API]
+    N8N --> CALLBACK[Backend Callback]
 
-    CALLBACK --> AUDIT[Audit Event Logging]
-    AUDIT --> DB
+    CALLBACK --> AUDIT[Audit Logging]
+    AUDIT --> DB[(PostgreSQL)]
 
     DB --> FE
 ```
