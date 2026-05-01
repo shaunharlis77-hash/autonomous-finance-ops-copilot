@@ -119,12 +119,11 @@ flowchart LR
 
 ---
 
-## Setup
+## Deployment
 
-See detailed setup instructions:
+See detailed deployment notes:
 
-- Backend: `./backend`
-- Frontend: `./frontend`
+👉 [Deployment Notes](./docs/deployment_notes.md)
 
 ---
 
