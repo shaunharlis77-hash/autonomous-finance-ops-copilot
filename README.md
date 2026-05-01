@@ -119,6 +119,14 @@ flowchart LR
 
 ---
 
+## ⚙️ Setup
+
+See detailed setup instructions:
+
+- Backend: `./backend`
+- Frontend: `./frontend`
+
+---
 ## Deployment
 
 See detailed deployment notes:
