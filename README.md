@@ -53,52 +53,23 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    START[Case processed by backend] --> SWITCH{Decision / Event Type}
+    START[Case processed by backend] --> DECISION{Decision}
 
-    SWITCH -->|Approved| APPROVED[Approved Case]
-    SWITCH -->|Rejected| REJECTED[Rejected Case]
-    SWITCH -->|Escalated| ESCALATED[Escalated Case]
-    SWITCH -->|Reviewer Assigned| ASSIGNED[Reviewer Assignment]
-    SWITCH -->|Review Approved| REVIEW_APPROVED[Reviewer Approved]
-    SWITCH -->|Review Rejected| REVIEW_REJECTED[Reviewer Rejected]
-    SWITCH -->|Request More Info| MORE_INFO[Request More Info]
+    DECISION -->|Approved| PAYMENT[Payment Workflow]
+    DECISION -->|Rejected| REJECTION[Rejection Workflow]
+    DECISION -->|Escalated| REVIEW[Reviewer Workflow]
+    DECISION -->|Request Info| INFO[Request More Info]
 
-    APPROVED --> PAYMENT[Shared Payment Workflow]
-    REVIEW_APPROVED --> PAYMENT
+    REVIEW -->|Assigned| ASSIGNED[Reviewer Assigned]
+    ASSIGNED --> REVIEW_OUTCOME{Reviewer Decision}
 
-    PAYMENT --> PAY1[Log payment workflow initiated]
-    PAY1 --> PAY2[Request finance approval]
-    PAY2 --> PAY3[Send finance approval email]
-    PAY3 --> PAY4[Wait for finance authorization]
-    PAY4 --> PAY5[Log finance authorization granted]
-    PAY5 --> PAY6[Log payment completed]
-    PAY6 --> PAY7[Send payment confirmation to submitter]
+    REVIEW_OUTCOME -->|Approved| PAYMENT
+    REVIEW_OUTCOME -->|Rejected| REJECTION
+    REVIEW_OUTCOME -->|More Info| INFO
 
-    REJECTED --> REJECTION[Shared Rejection Workflow]
-    REVIEW_REJECTED --> RLOG[Log review rejected]
-    RLOG --> REJECTION
-
-    REJECTION --> REJ1[Log rejection workflow started]
-    REJ1 --> REJ2[Send rejection email to submitter]
-    REJ2 --> REJ3[Log rejection notification sent]
-
-    ESCALATED --> ESC1[Log escalation workflow started]
-    ESC1 --> ESC2[Send reviewer assignment alert]
-    ESC2 --> ESC3[Log escalation notification sent]
-    ESC3 --> ESC4[Wait before assignment check]
-    ESC4 --> ESC5[Check case review status]
-    ESC5 --> ESC6{Still pending review?}
-    ESC6 -->|Yes| ESC7[Send assignment reminder]
-    ESC7 --> ESC8[Log escalation reminder sent]
-    ESC6 -->|No| ESC9[No further action]
-
-    ASSIGNED --> A1[Log reviewer assignment completed]
-    A1 --> A2[Send reviewer assignment email]
-    A2 --> A3[Log reviewer notification sent]
-
-    MORE_INFO --> M1[Log request for more info]
-    M1 --> M2[Send more info request to submitter]
-    M2 --> M3[Log more info request sent]
+    PAYMENT --> COMPLETE[Payment Completed]
+    REJECTION --> CLOSED[Case Closed]
+    INFO --> WAITING[Waiting for Input]
 ```
 ---
 
