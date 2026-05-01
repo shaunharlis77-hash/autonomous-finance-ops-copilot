@@ -110,16 +110,6 @@ flowchart LR
 
 ---
 
-## What This Project Demonstrates
-
-- AI-assisted business workflow design  
-- Human-in-the-loop decision systems  
-- Stateful workflow orchestration  
-- Integration of backend services with automation platforms  
-- Audit-driven system design for operational transparency  
-
----
-
 ## Future Improvements
 
 - Role-based access control  
