@@ -6,7 +6,7 @@ Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 - AI-assisted document extraction and validation  
 - Deterministic risk scoring and decision engine (approve / reject / escalate)  
@@ -17,7 +17,7 @@ Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -38,7 +38,7 @@ flowchart LR
 
 ---
 
-## 🔄 Workflow Automation (n8n)
+## Workflow Automation (n8n)
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 🔁 End-to-End Flow
+## End-to-End Flow
 
 1. Invoice uploaded and stored  
 2. Azure Document Intelligence extracts structured data  
@@ -71,7 +71,7 @@ flowchart TD
 
 ---
 
-## 🖥️ UI Overview
+## UI Overview
 
 - Dashboard: operational metrics and case distribution  
 - Cases: full audit timeline and workflow state  
@@ -79,7 +79,7 @@ flowchart TD
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 - Frontend: Next.js, Tailwind CSS  
 - Backend: FastAPI  
@@ -90,7 +90,7 @@ flowchart TD
 
 ---
 
-## 📈 What This Project Demonstrates
+## What This Project Demonstrates
 
 - AI-assisted business workflow design  
 - Human-in-the-loop decision systems  
@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 - Role-based access control  
 - Policy configuration system  
@@ -109,7 +109,7 @@ flowchart TD
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 See detailed setup instructions:
 
@@ -118,6 +118,13 @@ See detailed setup instructions:
 
 ---
 
-## 📌 Notes
+## Notes
 
 This is a production-style portfolio project designed to demonstrate enterprise-grade workflow automation and AI-assisted decision systems.
+
+---
+
+## System in Action
+
+### Case Audit Timeline
+![Case Detail](./screenshots/case-detail.png)
