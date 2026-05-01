@@ -6,7 +6,7 @@ Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 - AI-assisted document extraction and validation  
 - Deterministic risk scoring and decision engine (approve / reject / escalate)  
@@ -17,49 +17,92 @@ Built with FastAPI, PostgreSQL, Azure Document Intelligence, LangGraph, and n8n.
 
 ---
 
-## 🏗️ Architecture
-
-```mermaid
-flowchart LR
-    U[User] --> FE[Frontend (Next.js)]
-    FE --> API[Backend (FastAPI)]
-
-    API --> DB[(PostgreSQL)]
-    API --> DI[Azure Document Intelligence]
-
-    API --> DECISION[Validation + Risk + Decision Engine]
-    DECISION --> GRAPH[LangGraph]
-
-    GRAPH --> N8N[n8n Automation]
-    N8N --> API
-
-    API --> FE
-```
-
----
-
-## 🔄 Workflow Automation (n8n)
+## Architecture
 
 ```mermaid
 flowchart TD
-    Decision -->|Approved| Payment
-    Decision -->|Rejected| Reject
-    Decision -->|Escalated| Review
+    U[User / Submitter] --> FE[Next.js Frontend]
 
-    Review --> Assigned --> ReviewOutcome
+    FE --> DASH[Dashboard]
+    FE --> CASES[Case Detail + Audit Timeline]
+    FE --> REVIEWS[Reviewer Queue]
 
-    ReviewOutcome -->|Approved| Payment
-    ReviewOutcome -->|Rejected| Reject
-    ReviewOutcome -->|More Info| RequestInfo
+    FE --> API[FastAPI Backend]
 
-    Payment --> Completed
-    Reject --> Closed
-    RequestInfo --> Waiting
+    API --> BLOB[Azure Blob Storage]
+    API --> DI[Azure Document Intelligence]
+    API --> DB[(PostgreSQL)]
+
+    API --> ENGINE[Validation + Risk Scoring + Decision Engine]
+    ENGINE --> GRAPH[LangGraph Decision Workflow]
+
+    GRAPH --> N8N[n8n Workflow Automation]
+
+    N8N --> EMAIL[Gmail Notifications]
+    N8N --> CALLBACK[Backend Callback API]
+
+    CALLBACK --> AUDIT[Audit Event Logging]
+    AUDIT --> DB
+
+    DB --> FE
 ```
 
 ---
 
-## 🔁 End-to-End Flow
+## Workflow Automation (n8n)
+
+```mermaid
+flowchart TD
+    START[Case processed by backend] --> SWITCH{Decision / Event Type}
+
+    SWITCH -->|Approved| APPROVED[Approved Case]
+    SWITCH -->|Rejected| REJECTED[Rejected Case]
+    SWITCH -->|Escalated| ESCALATED[Escalated Case]
+    SWITCH -->|Reviewer Assigned| ASSIGNED[Reviewer Assignment]
+    SWITCH -->|Review Approved| REVIEW_APPROVED[Reviewer Approved]
+    SWITCH -->|Review Rejected| REVIEW_REJECTED[Reviewer Rejected]
+    SWITCH -->|Request More Info| MORE_INFO[Request More Info]
+
+    APPROVED --> PAYMENT[Shared Payment Workflow]
+    REVIEW_APPROVED --> PAYMENT
+
+    PAYMENT --> PAY1[Log payment workflow initiated]
+    PAY1 --> PAY2[Request finance approval]
+    PAY2 --> PAY3[Send finance approval email]
+    PAY3 --> PAY4[Wait for finance authorization]
+    PAY4 --> PAY5[Log finance authorization granted]
+    PAY5 --> PAY6[Log payment completed]
+    PAY6 --> PAY7[Send payment confirmation to submitter]
+
+    REJECTED --> REJECTION[Shared Rejection Workflow]
+    REVIEW_REJECTED --> RLOG[Log review rejected]
+    RLOG --> REJECTION
+
+    REJECTION --> REJ1[Log rejection workflow started]
+    REJ1 --> REJ2[Send rejection email to submitter]
+    REJ2 --> REJ3[Log rejection notification sent]
+
+    ESCALATED --> ESC1[Log escalation workflow started]
+    ESC1 --> ESC2[Send reviewer assignment alert]
+    ESC2 --> ESC3[Log escalation notification sent]
+    ESC3 --> ESC4[Wait before assignment check]
+    ESC4 --> ESC5[Check case review status]
+    ESC5 --> ESC6{Still pending review?}
+    ESC6 -->|Yes| ESC7[Send assignment reminder]
+    ESC7 --> ESC8[Log escalation reminder sent]
+    ESC6 -->|No| ESC9[No further action]
+
+    ASSIGNED --> A1[Log reviewer assignment completed]
+    A1 --> A2[Send reviewer assignment email]
+    A2 --> A3[Log reviewer notification sent]
+
+    MORE_INFO --> M1[Log request for more info]
+    M1 --> M2[Send more info request to submitter]
+    M2 --> M3[Log more info request sent]
+```
+---
+
+## End-to-End Flow
 
 1. Invoice uploaded and stored  
 2. Azure Document Intelligence extracts structured data  
@@ -71,7 +114,7 @@ flowchart TD
 
 ---
 
-## 🖥️ UI Overview
+## UI Overview
 
 - Dashboard: operational metrics and case distribution  
 - Cases: full audit timeline and workflow state  
@@ -79,7 +122,7 @@ flowchart TD
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 - Frontend: Next.js, Tailwind CSS  
 - Backend: FastAPI  
@@ -90,7 +133,7 @@ flowchart TD
 
 ---
 
-## 📈 What This Project Demonstrates
+## What This Project Demonstrates
 
 - AI-assisted business workflow design  
 - Human-in-the-loop decision systems  
@@ -100,7 +143,7 @@ flowchart TD
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 - Role-based access control  
 - Policy configuration system  
@@ -109,7 +152,7 @@ flowchart TD
 
 ---
 
-## ⚙️ Setup
+## Setup
 
 See detailed setup instructions:
 
@@ -118,6 +161,15 @@ See detailed setup instructions:
 
 ---
 
-## 📌 Notes
+## Notes
 
 This is a production-style portfolio project designed to demonstrate enterprise-grade workflow automation and AI-assisted decision systems.
+
+---
+
+## System in Action
+
+### Case Audit Timeline
+![Case Detail](./screenshots/case_detail.png)
+
+This timeline captures the full lifecycle of a case, including AI decisioning, escalation, reviewer assignment, workflow automation, and final resolution.
