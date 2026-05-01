@@ -19,7 +19,6 @@ The system currently integrates with the following services:
 - Azure Document Intelligence
 - LangGraph
 - n8n Workflow Automation
-- Email Automation via n8n Webhooks
 
 These components work together to support document ingestion, validation, decisioning, workflow orchestration, escalation handling, and audit reporting.
 
